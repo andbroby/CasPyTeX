@@ -1,0 +1,5 @@
+"a^3/a^2" "a" "a"
+"a^3/a^2" "a" "None"
+"a^b/a^k" "a^b/a^k" "b"
+"a^b/a^k" "a^b/a^k" "k"
+"3^k/3^3" "3^k/27" "None"

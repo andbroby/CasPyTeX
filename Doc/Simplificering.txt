@@ -1,0 +1,23 @@
+For potenser:
+	(a^b)^c=a^(b*c) V->potenspotens
+		Hvis a er variabel. måske også hvis b eller c er (?????)
+for gange:
+	a^b*a^c=a^(b+c) V->sameroot/antisameroot
+		hvis a er variable skal det gøres. ellers ikke
+		omvendt hvis b eller c er variabel
+	b^a*c^a=(bc)^a V->Sameexponent/antisameexponent
+		hvis a er variabel
+		omvendt hvis b eller c er variabel
+for division:
+    a^b/a^c=a^(b-c) V->sameroot/ANTIsameroot
+    	hvis a er variable
+    	omvendt hvis b eller c er variabel
+    b^a/c^a=(b/c)^a V->sameexponentfrac/anti
+    	hvis a er variabel
+    	omvendt hvis b eller c er variabel
+for addition:
+	b*a+c*a=(b+c)*a  V->antidistributive/distributive
+		hvis a er variabel
+		omvendt hvis b eller c er variabel
+
+variable har det bedre uden for parenteser, uanset hvad.

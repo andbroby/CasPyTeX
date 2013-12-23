@@ -1,0 +1,4 @@
+Der skal være en metode hvormed tal benævnes ie skal det være 2*a+b eller b+2*a (Se OmTekstOutput.txt)
+
+Regneregler med brøker: a*(n/p)=(a*n)/p og brøk gange brøk (OG HVORNÅR DET SKAL GØRES)
+SPECIELLE FUNKTIONER (SINX COSX SQRT(X) LOG(X)) 

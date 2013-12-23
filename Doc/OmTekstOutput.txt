@@ -1,0 +1,11 @@
+Det er vigtigt for unittester-modulet, at der er en vis orden i den måde man skriver de forenklede udtryk på, altså hvilke ukendte man skriver først osv:
+Udtrykkene arrangeres efter hvilke variabler de indeholder:
+
+Variablerne arrangeres efter alfabetisk rækkefølge.
+
+Skulle der være led der indeholder flere variabler, ie "a*b*z", skal dette led placeres som var det et led med a i.
+
+Man har altså led med samme variabler i samme grupper af led. Herefter bestemmer størrelsen af eksponenten på variablen rækkefølgen. Skulle eksponenten ikke være et nøgent tal, sættes disse led foran.
+
+
+for produkter gælder at de skal arrangeres med konstanter forrest, så variabler i alfabetisk rækkefølge. 
