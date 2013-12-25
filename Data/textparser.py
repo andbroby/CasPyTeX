@@ -63,7 +63,7 @@ def TextToCAS(instring,recursions=0):
 		return Entities.number([instring])
 debug.lvl=0
 if __name__=="__main__":
-	a=TextToCAS("2*(3*x+3)")
+	a=TextToCAS("2*x^2-3*x^2")
 	#print(a.tostring())
 	b=a.tostring()
 

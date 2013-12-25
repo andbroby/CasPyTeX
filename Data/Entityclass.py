@@ -921,7 +921,7 @@ def SimplifyAll(instance,focus):
 		
 		Simplifyingmethods=SimplifyClassdict[newsimplify.type()]
 	except KeyError:
-		methodfile=open("Data/Simplify Methods/"+newsimplify.type()+".simplifymethods")
+		methodfile=open("Simplify Methods/"+newsimplify.type()+".simplifymethods")
 		rawmethods=methodfile.readlines()
 		#debug(3,"METHODS FOUND FOR CLASS:"+newsimplify.type()+"\n"+str(rawmethods))
 		methods=[line.replace("\n","") for line in rawmethods]
