@@ -1,7 +1,6 @@
 from stringmanipulations import *
 from debugger import *
 
-
 from fractions import gcd
 from copy import deepcopy
 class product:
@@ -45,9 +44,9 @@ class product:
 				returnstring+=n.tolatex()+r"\cdot "
 		if returnstring[-6:]==r"\cdot ":returnstring=returnstring[:-6]
 		return returnstring
-	def simplify(self,focus=None):###
+	def simplify(self,focus=None,thrd=0):###
 
-		return SimplifyAll(self,focus)
+		return SimplifyAll(self,focus,thrd)
 	def delfactor(self,index):
 		copy=self.factors[:]
 		copy.pop(index)
@@ -63,7 +62,7 @@ class product:
 		return True
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
-			return number([str(eval(self.tostring().replace("^","**")))])
+			return newnumber([str(eval(self.tostring().replace("^","**")))])
 		else:
 			newentitylist=[]
 			for n in range(len(self.factors)):
@@ -82,8 +81,16 @@ class product:
 		if proddy==1:
 			retval=newarr
 		else: 
-			retval=[number([str(proddy)])]+newarr
-		return maybeclass(retval,product)
+			retval=[newnumber([str(proddy)])]+newarr
+		#if len(retval)==len(self.factors):
+		#	return False
+		newretval=[]
+		for n in retval:
+			if n.type()=="product":
+				newretval+=n.factors
+			else:
+				newretval.append(n)
+		return maybeclass(newretval,product)
 	def simplifyallparts(self,focus):
 		newparts=[]
 		for n in self.factors:
@@ -116,7 +123,6 @@ class product:
 		for n in info1[1]:
 			foundmatch=False
 			for index,k in enumerate(info2[1]):
-				#print("OIOI",n.tostring(),k.tostring(),(n.__eq__(k,False) and index not in useditems),useditems)
 				if n.__eq__(k,False) and index not in useditems:
 					useditems.append(index)
 					foundmatch=True
@@ -133,7 +139,6 @@ class product:
 				if k not in variables:
 					variables.append(k)
 		return variables
-
 	def ntimes0(self,focus):
 		zeroed=False
 		for n in self.factors:
@@ -142,11 +147,11 @@ class product:
 		if zeroed:
 			return number(["0"])
 		return False
-	def associativeprop(self,focus):
+	def associativeprop(self,focus=None):
 		newfactors=[]
 		retfalse=True
 		for n in self.factors:
-			if n.type()=="product":
+			if n.type()=="product" and not (len(n.factors)==2 and n.factors[0]==number(["-1"]) and n.factors[0].type()!="product"):
 				retfalse=False
 				newfactors+=n.factors
 			else:
@@ -232,6 +237,10 @@ class product:
 		return False
 	def expand(self):
 		return ExpandAll(self)
+	def printtree(self,rec=0):
+		print("   "*rec+"PRODUCT: "+self.tostring())
+		for n in self.factors:
+			n.printtree(rec+1)
 class number:
 	def __init__(self,arr):
 		self.arr=arr
@@ -286,6 +295,8 @@ class number:
 		return []
 	def expand(self):
 		return self
+	def printtree(self,rec=0):
+		print("   "*rec+self.num)
 class potens:
 	def __init__(self,arr):
 		self.arr=arr
@@ -318,9 +329,9 @@ class potens:
 		if returnstring[-1]=="^":
 			returnstring=returnstring[:-1]
 		return returnstring
-	def simplify(self,focus=None):#
+	def simplify(self,focus=None,thrd=0):#
 		
-		return SimplifyAll(self,focus)
+		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
 		
 		return max([n.maxleveloftree(level+1) for n in self.rootandexponents])
@@ -334,7 +345,7 @@ class potens:
 		return False
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
-			return number([str(eval(self.tostring().replace("^","**")))])
+			return newnumber([str(eval(self.tostring().replace("^","**")))])
 		else:
 			newentitylist=[]
 			for n in range(len(self.rootandexponents)):
@@ -365,9 +376,9 @@ class potens:
 	def sameexponentfrac(self,focus): #(focus/b)^c=focus^c/b^c
 		if self.root.type()=="division":
 			if  (focus!=None and self.root.contains(focus.tostring())) or (focus==None or (  self.root.contains(focus.tostring())==False and self.exponent.contains(focus.tostring())==False)):
-				newnum=potens([self.root.numerator,self.exponent])
+				newnumb=potens([self.root.numerator,self.exponent])
 				newdenom=potens([self.root.denominator,self.exponent])
-				return division([newnum,newdenom])
+				return division([newnumb,newdenom])
 		return False
 	def antisameroot(self,focus):
 		if self.exponent.type()=="addition":
@@ -423,7 +434,6 @@ class potens:
 					for n in range(exponentint):
 						proddyfactors.append(deepcopy(self.root))
 					proddy=product(proddyfactors).distributive("force")
-					#print("proddy",proddy.tostring(),exponentint)
 					while True:
 						newaddends=[]
 						for addend in proddy.addends:
@@ -436,7 +446,6 @@ class potens:
 							else:
 								newaddends.append(addend)
 						newproddy=addition(newaddends)
-						#print("newaddends",newaddends,newproddy.tostring(),proddy.tostring())
 						if newproddy.__eq__(proddy,False):
 							return newproddy.simplify()
 						else:
@@ -444,6 +453,10 @@ class potens:
 		return False
 	def expand(self):
 		return ExpandAll(self)
+	def printtree(self,rec=0):
+		print("   "*rec+"POTENS: "+self.tostring())
+		for n in [self.root,self.exponent]:
+			n.printtree(rec+1)
 class division:
 	def __init__(self,arr):
 		self.arr=arr
@@ -476,25 +489,25 @@ class division:
 		if approx==False and self.numerator.type()=="number" and self.denominator.type()=="number":
 			if float(self.numerator.tostring())%1==0 and float(self.denominator.tostring())%1==0:
 				lcf=gcd(float(self.numerator.num),float(self.denominator.num))
-				self.numerator=number( [str(int(float(self.numerator.num)/lcf))] )
-				self.denominator=number([str(int(float(self.denominator.tostring())/lcf))])
+				self.numerator=newnumber( [str(int(float(self.numerator.num)/lcf))] )
+				self.denominator=newnumber([str(int(float(self.denominator.tostring())/lcf))])
 				return False
 		return True
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			evalnum=eval(self.tostring().replace("^","**"))
 			if evalnum%1==0 or approx==True:
-				return number([str(eval(self.tostring().replace("^","**")))])
+				return newnumber([str(eval(self.tostring().replace("^","**")))])
 			else:
 				if self.numerator.type()=="number" and self.denominator.type()=="number":
 					if float(self.numerator.tostring())%1==0 and float(self.denominator.tostring())%1==0:
 						
 						lcf=gcd(float(self.numerator.num),float(self.denominator.num))
 
-						newarr=[number( [str(float(self.numerator.num)/lcf)] ),number([str(float(self.denominator.tostring())/lcf)])]
+						newarr=[newnumber( [str(float(self.numerator.num)/lcf)] ),newnumber([str(float(self.denominator.tostring())/lcf)])]
 						return division(newarr)
 					else: 
-						return number([str(eval(self.tostring().replace("^","**")))])
+						return newnumber([str(eval(self.tostring().replace("^","**")))])
 		else:
 			newentitylist=[self.numerator.evalsimplify(approx),self.denominator.evalsimplify(approx)]
 			if len(newentitylist)==1:return newentitylist[0]
@@ -531,7 +544,7 @@ class division:
 			return False
 		return info1[1]==info2[1]
 	def ndiv1(self,focus):
-		if self.denominator==number(["1"]):
+		if self.denominator==newnumber(["1"]):
 			return self.numerator
 		elif self.denominator==number(["-1"]):
 			return product([number(["-1"]),self.numerator])
@@ -567,6 +580,10 @@ class division:
 	def expand(self):
 		
 		return ExpandAll(self)
+	def printtree(self,rec=0):
+		print("   "*rec+"DIVISION: "+self.tostring())
+		for n in [self.numerator,self.denominator]:
+			n.printtree(rec+1)
 class addition:
 	def __init__(self,arr):
 		self.arr=arr
@@ -586,9 +603,9 @@ class addition:
 			if mathstring!="" and n[0]!="-":mathstring+="+"
 			mathstring+=n
 		return mathstring
-	def simplify(self,focus=None):
+	def simplify(self,focus=None,thrd=0):
 		
-		return SimplifyAll(self,focus)
+		return SimplifyAll(self,focus,thrd)
 	def simplifyallparts(self,focus):
 		newparts=[]
 		for n in self.addends:
@@ -682,7 +699,7 @@ class addition:
 		return True
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
-			return number([str(eval(self.tostring().replace("^","**")))])
+			return newnumber([str(eval(self.tostring().replace("^","**")))])
 		else:
 			newentitylist=[]
 			for n in range(len(self.addends)):
@@ -701,7 +718,7 @@ class addition:
 		if summy==0:
 			retval=newarr
 		else: 
-			retval=[number([str(summy)])]+newarr
+			retval=[newnumber([str(summy)])]+newarr
 		return maybeclass(retval,addition)
 	def contains(self,varstring):
 		if varstring==None:
@@ -726,7 +743,6 @@ class addition:
 			return False
 		useditems=[]
 		for n in info1[1]:
-			#print("TRYING",n.tostring(),"iN",[n.tostring() for n in info2[1]])
 			foundmatch=False
 			for index,k in enumerate(info2[1]):
 				if n.__eq__(k,False) and index not in useditems:
@@ -763,6 +779,7 @@ class addition:
 		return ExpandAll(self)
 	def NonIntrusiveAntiDistributive(self,focus=None):
 		breakitall=False
+		print("OI")
 		for index1,addend1 in enumerate(self.addends):
 			for index2,addend2 in enumerate(self.addends):
 				if index1==index2:continue
@@ -770,11 +787,13 @@ class addition:
 					if addend2.type()=="product":
 						for in1,factor1 in enumerate(addend1.factors):
 							for in2,factor2 in enumerate(addend2.factors):
-								if in1==in2:continue
+								print(factor1.tostring(),factor2.tostring())
 								if factor1==factor2:
+									print("OI")
 									if not factor1.evaluable(True):
-										resten1=factor1.delfactor(in1)
-										resten2=factor2.delfactor(in2)
+										resten1=addend1.delfactor(in1)
+										resten2=addend2.delfactor(in2)
+										print("OIOIOI",resten1.evaluable(True),resten2.evaluable(True))
 										if resten1.evaluable(True) and resten2.evaluable(True):
 											newfront=addition([resten1,resten2])
 											unified=product([newfront,factor1])
@@ -785,7 +804,7 @@ class addition:
 						for in1,factor1 in enumerate(addend1.factors):
 							if factor1==addend2:
 								if not factor1.evaluable(True):
-									resten1=factor1.delfactor(in1)
+									resten1=addend1.delfactor(in1)
 									if resten1.evaluable(True):
 										unified=product([addition([number(["1"]),resten1]),factor1])
 										breakitall=True
@@ -796,7 +815,7 @@ class addition:
 						for in2,factor2 in enumerate(addend2.factors):
 							if addend1==factor2:
 								if not factor2.evaluable(True):
-									resten2=factor2.delfactor(in2)
+									resten2=addend2.delfactor(in2)
 									if resten2.evaluable(True):
 										unified=product([addition([number(["1"]),resten2]),factor2])
 										breakitall=True
@@ -820,7 +839,10 @@ class addition:
 			return maybeclass(newaddends,addition)
 
 		return False						
-
+	def printtree(self,rec=0):
+		print("   "*rec+"ADDITION: "+self.tostring())
+		for n in self.addends:
+			n.printtree(rec+1)
 
 
 
@@ -832,7 +854,55 @@ addition
 number
 potens
 """
-def ExpandAll(instance):
+def ExpandAll(instance): #Expands and simplifies (a little)
+	print(instance.tostring())
+	newinstance=treesimplify(instance)
+	while True:
+		if newinstance.type()=="addition":
+			newinstance=maybeclass([ExpandAll(n) for n in newinstance.addends],addition)
+			newinstance=treesimplify(newinstance)
+			testy=newinstance.NonIntrusiveAntiDistributive(None)
+			if testy!=False:
+				newinstance=testy
+				print("antidist")
+				continue
+		elif newinstance.type()=="product":
+			newinstance=maybeclass([ExpandAll(n) for n in newinstance.factors],product)
+			newinstance=treesimplify(newinstance)
+			distributexp=newinstance.distributive("force")
+			if distributexp!=False:
+				newinstance=distributexp
+				print("dist")
+				continue
+			ntime0exp=newinstance.ntimes0(None)
+			if ntime0exp!=False:
+				newinstance=ntime0exp
+				print("times0")
+				continue
+			evalpartexp=newinstance.evalpart(None)
+			if evalpartexp.tostring()!=newinstance.tostring():
+				newinstance=evalpartexp
+				print("evalpart")
+				continue
+		elif newinstance.type()=="potens":
+			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.root,newinstance.exponent]],potens)
+			newinstance=treesimplify(newinstance)
+			nomialexp=newinstance.nomials()
+			if nomialexp!=False:
+				newinstance=nomialexp
+				print("nomial")
+				continue
+		elif newinstance.type()=="division":
+			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.numerator,newinstance.denominator]],division)
+			newinstance=treesimplify(newinstance)
+		elif newinstance.type()=="number":
+			pass
+		else:
+			raise ValueError("869 - Expected instance")
+		break
+	print(instance.tostring(),"TO",treesimplify(newinstance).evalsimplify().tostring())
+	return treesimplify(treesimplify(newinstance).evalsimplify())
+def ExpandAll2(instance):
 	if True:
 		if instance.type()=="number":
 			return instance
@@ -857,14 +927,17 @@ def ExpandAll(instance):
 				newnumanddenom.append(n.expand())
 			newinstance=maybeclass(newnumanddenom,division) #expandallparts
 	if instance.type()=="addition":
+		
 		pass	
 	if instance.type()=="product":
 		distributexp=newinstance.distributive("force")
 		if distributexp!=False:
 			return ExpandAll(distributexp)
 	if instance.type()=="division":
+		
 		pass
 	if instance.type()=="number":
+		
 		pass
 	if instance.type()=="potens":
 		nomialexp=newinstance.nomials()
@@ -878,41 +951,65 @@ def ExpandAll(instance):
 			if testy!=False:
 				newinstance=testy
 				if newinstance.type()!="addition":
-					return newinstance.evalsimplify()
+					break
 			else:
-				return newinstance.evalsimplify()
+				break
+	if newinstance.type()=="product":
+		if newinstance.ntimes0(None)!=False:
+
+			newinstance=newinstance.ntimes0(None)
 	if newinstance.type()=="product":
 		if newinstance.associativeprop(None)!=False:
 			newinstance=newinstance.associativeprop(None)
-
+	if newinstance.type()=="product":
+		if newinstance.ntimes0(None)!=False:
+			newinstance=newinstance.ntimes0(None)
 	return newinstance.evalsimplify()
+
+def treesimplify(instance): #simplifies trees (via the 2 associativeprop() functions)
+	if True: #simplifyparts
+		if instance.type()=="addition":
+			newinstance=maybeclass([treesimplify(n) for n in instance.addends],addition)
+		elif instance.type()=="product":
+			newinstance=maybeclass([treesimplify(n) for n in instance.factors],product)
+		elif instance.type()=="potens":
+			newinstance=maybeclass([treesimplify(n) for n in [instance.root,instance.exponent]],potens)
+		elif instance.type()=="division":
+			newinstance=maybeclass([treesimplify(n) for n in [instance.numerator,instance.denominator]],division)
+		elif instance.type()=="number":
+			newinstance=instance
+	if newinstance.type()=="addition" or newinstance.type()=="product":
+		if newinstance.associativeprop(None)!=False:
+			newinstance=newinstance.associativeprop(None)
+	return newinstance
+
 
 #Simplificeringsmetoder
 SimplifyClassdict=dict() #kommer til at indeholde som index typen af klassen (produkt fx) og saa en array af simplificeringsmetoder som strings
-def SimplifyAll(instance,focus):
-	if focus=="ThisIsTheSafestValueIcanThinkOf":
-		retvar=[instance.expand().evalsimplify()]
-		for k in instance.findvariables()+[None]:
-			testy=SimplifyAll(instance,number([k]))
-			if testy.tostring() not in retvar and not testy.tostring()==instance.tostring():
-				retvar.append(testy.tostring())
-		if retvar==[]:
-			retvar=[instance.tostring()]
-		return retvar
-	if focus=="ThisIsForTheLatexCompiler":
-		retvar=[instance.expand().evalsimplify()]
-		for k in instance.findvariables()+[None]:
-			testy=SimplifyAll(instance,number([k]))
-			notinretvar=True
+def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify på strings, 2 er for latex
+	#instance.printtree()
+	instance=treesimplify(instance)
+	#instance.printtree()
+	if specialsimp in [1,2]:
+		retvar=[]
+		expanded=instance.expand()
+		if not expanded.__eq__(instance,False):
+			print("EXPAND ADDED",expanded.tostring())
+			retvar.append(expanded)
+		for focus1 in instance.findvariables()+[None]:
+			testsimp=SimplifyAll(instance,number([focus1]))
+			willbeadded=True
 			for alreadyfound in retvar:
-				if alreadyfound.__eq__(testy,False) and not instance.__eq__(testy,False):
-					notinretvar=False
+				if testsimp.__eq__(alreadyfound,False):
+					willbeadded=False
 					break
-			if notinretvar:
-				retvar.append(testy)
-		if retvar==[]:
-			retvar=[instance]
-		return [n.tolatex() for n in retvar if (not n.__eq__(instance,False))]
+			if willbeadded and not testsimp.__eq__(instance,False):
+				retvar.append(testsimp)
+		if specialsimp==1:
+			return [n.tostring() for n in retvar]
+		elif specialsimp==2:
+			return [n.tolatex() for n in retvar]
+
 	debug(2,"SimplifyAll fik input: "+instance.tostring())
 	newsimplify=instance.simplifyallparts(focus).evalsimplify()
 	debug(2,"SIMPLIFYING DONE FROM "+instance.tostring()+" to "+newsimplify.tostring())
@@ -921,7 +1018,14 @@ def SimplifyAll(instance,focus):
 		
 		Simplifyingmethods=SimplifyClassdict[newsimplify.type()]
 	except KeyError:
-		methodfile=open("Simplify Methods/"+newsimplify.type()+".simplifymethods")
+		try:
+			methodfile=open("Simplify Methods/"+newsimplify.type()+".simplifymethods")
+		except:
+			try:
+				methodfile=open("Data/Simplify Methods/"+newsimplify.type()+".simplifymethods")
+			except:
+				raise ValueError("Could not find the .simplifymethod files")
+
 		rawmethods=methodfile.readlines()
 		#debug(3,"METHODS FOUND FOR CLASS:"+newsimplify.type()+"\n"+str(rawmethods))
 		methods=[line.replace("\n","") for line in rawmethods]
@@ -931,19 +1035,12 @@ def SimplifyAll(instance,focus):
 		methodfile.close()
 	for method in Simplifyingmethods:
 		testingifmethodworked=eval("newsimplify."+method+"(focus)")
-
 		if testingifmethodworked!=False:
-			debug(2,"SIMPLIFYING FROM "+newsimplify.tostring()+" TO "+testingifmethodworked.tostring())
-			#print("QUICKOUT",testingifmethodworked.tostring(),method)
+			debug(2,"SIMPLIFYING FROM "+newsimplify.tostring()+" TO "+testingifmethodworked.tostring()+" VIA "+method)
 			return testingifmethodworked.simplify(focus)
 	debug(2,"(HELT FAERDIG) SimplifyAll  output fra: "+newsimplify.tostring()+" til "+newsimplify.evalsimplify().tostring())
 	return newsimplify.evalsimplify()
-"""
-Addition:associativeprop()
-division:ndiv1()
-potens: .ntothe1()
-produkt: .ntimes0().associativeprop()
-"""
+
 def maybeclass(arr,classfunc):
 	if len(arr)==1:
 		return arr[0]
@@ -951,6 +1048,13 @@ def maybeclass(arr,classfunc):
 		return classfunc(arr)
 	else:
 		return 1/0
+def newnumber(arr):
+	num=arr[0]
+	if num=="-1":
+		return number(["-1"])
+	if num[0]=="-":
+		return product([number(["-1"]),number([num[1:]])])
+	return number([num])
 class otherfunction: #GLEMMES INDTIL VIDERE
 	def __init__(self,arr):
 		self.arr=arr

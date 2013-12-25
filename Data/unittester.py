@@ -3,7 +3,7 @@ from debugger import *
 debug.lvl=1
 def unittest(filename,approx=False):
 	print("Starting  "+filename.replace(".test","")+"\n---")
-	f=open('Data/Tests/'+filename)
+	f=open('Tests/'+filename)
 	problems = f.readlines()
 	errors=0
 	for problem in problems:

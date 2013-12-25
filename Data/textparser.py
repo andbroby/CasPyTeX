@@ -63,10 +63,14 @@ def TextToCAS(instring,recursions=0):
 		return Entities.number([instring])
 debug.lvl=0
 if __name__=="__main__":
-	a=TextToCAS("2*x^2-3*x^2")
+	#a=TextToCAS("2*(3*x^2+2)-6*x^2")
+	a=TextToCAS("6*x^2-6*x^2")
 	#print(a.tostring())
-	b=a.tostring()
-
+	#b=a.tostring()
+	a.printtree()
 	a=a.expand()
-	print("DONE WITH SIMPLIFY")
-	print("INPUT:"+b+"\n"+"RESULT:"+a.tostring())#+"\nApprox: " +a.approx().tostring())
+	#print(a[1].addends)
+	#a.printtree()
+	print(a.tostring())
+	#print("DONE WITH SIMPLIFY")
+	#print("INPUT:"+b+"\n"+"RESULT:"+a.tostring())#+"\nApprox: " +a.approx().tostring())

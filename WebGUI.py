@@ -12,7 +12,7 @@ FILE = 'frontend.html'
 PORT = 8080
 def post_simplify(str):
     exp=cas.TextToCAS(str)
-    result=exp.simplify("ThisIsForTheLatexCompiler")
+    result=exp.simplify("ThisIsForTheLatexCompiler",2)
     if type(result)==type(cas.TextToCAS("a")):
         result=[result.tolatex()]
     retval="SIMPL#"+exp.tolatex()
@@ -30,15 +30,16 @@ class TestHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get_all('Content-Length')[0])  
         data_string = self.rfile.read(length).decode('utf-8')
-        try:
-            if data_string[:10]=="#SAFEVAL1#":
-                result=byting(post_simplify(data_string[10:]))
-            elif data_string[:10]=="#SAFEVAL2#":
-                result=byting(post_solve(data_string[10:]))
-            else:
-                result=byting("error")
-        except:
+        print("RECEIVED STRING   :", data_string)
+
+        if data_string[:10]=="#SAFEVAL1#":
+            result=byting(post_simplify(data_string[10:]))
+        elif data_string[:10]=="#SAFEVAL2#":
+            result=byting(post_solve(data_string[10:]))
+        else:
             result=byting("error")
+        #except:
+         #   result=byting("error")
         self.wfile.write(result)
 
 def open_browser():
