@@ -22,25 +22,23 @@ def post_simplify(str):
 def post_solve(str):
     
     return "SOLVE"
-
 def byting(str):
 
     return bytes(str,"utf-8")
 class TestHandler(http.server.SimpleHTTPRequestHandler):
     """The test example handler."""
-
     def do_POST(self):
         length = int(self.headers.get_all('Content-Length')[0])  
         data_string = self.rfile.read(length).decode('utf-8')
-
-        if data_string[:10]=="#SAFEVAL1#":
-            result=byting(post_simplify(data_string[10:]))
-        elif data_string[:10]=="#SAFEVAL2#":
-            result=byting(post_solve(data_string[10:]))
-        else:
+        try:
+            if data_string[:10]=="#SAFEVAL1#":
+                result=byting(post_simplify(data_string[10:]))
+            elif data_string[:10]=="#SAFEVAL2#":
+                result=byting(post_solve(data_string[10:]))
+            else:
+                result=byting("error")
+        except:
             result=byting("error")
-        #except:
-        #    result=byting("error")
         self.wfile.write(result)
 
 def open_browser():
@@ -60,4 +58,3 @@ def start_server():
 if __name__ == "__main__":
     open_browser()
     start_server()
-    
