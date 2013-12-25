@@ -5,9 +5,9 @@ TextToCAS tager matematik og konverterer det til CAS'en
 (a+b)-2*a^3
 
 """
-#from __future__ import division
-#from __future__ import print_function
 from sys import exit
+
+
 import Entityclass as Entities
 from stringmanipulations import *
 from debugger import *

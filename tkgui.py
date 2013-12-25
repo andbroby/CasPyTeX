@@ -1,9 +1,12 @@
-import textparser
 import os
 from subprocess import call
 from sys import platform
 from tkinter import *
 from tkinter import ttk
+import sys
+
+sys.path.insert(0, 'Data/')
+import textparser
 class LatexFile:
 	def __init__(self,filename="Test.tex"):
 		if ".tex" not in filename:

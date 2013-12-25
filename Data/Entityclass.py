@@ -1,7 +1,7 @@
-#from __future__ import division
-#from __future__ import print_function
 from stringmanipulations import *
 from debugger import *
+
+
 from fractions import gcd
 from copy import deepcopy
 class product:

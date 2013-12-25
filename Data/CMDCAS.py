@@ -1,7 +1,8 @@
-import textparser
 import os
 from subprocess import call
 from sys import platform
+
+import textparser
 class LatexFile:
 	def __init__(self,filename="Test.tex"):
 		if ".tex" not in filename:

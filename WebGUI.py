@@ -3,7 +3,9 @@ import threading
 import webbrowser
 import http.server
 import socketserver
+import sys
 #CAS IMPORTS
+sys.path.insert(0, 'Data/')
 import textparser as cas
 
 FILE = 'frontend.html'
@@ -18,10 +20,12 @@ def post_simplify(str):
         retval+=r"#\("+n+r"\)"
     return retval
 def post_solve(str):
+    
     return "SOLVE"
 
-def byting(str):return bytes(str,"utf-8")
-print(byting("#"))
+def byting(str):
+
+    return bytes(str,"utf-8")
 class TestHandler(http.server.SimpleHTTPRequestHandler):
     """The test example handler."""
 
@@ -56,3 +60,4 @@ def start_server():
 if __name__ == "__main__":
     open_browser()
     start_server()
+    

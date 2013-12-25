@@ -1,11 +1,9 @@
-from __future__ import print_function
-from __future__ import division
 import textparser
 from debugger import *
 debug.lvl=1
 def unittest(filename,approx=False):
 	print("Starting  "+filename.replace(".test","")+"\n---")
-	f=open('Tests/'+filename)
+	f=open('Data/Tests/'+filename)
 	problems = f.readlines()
 	errors=0
 	for problem in problems:
