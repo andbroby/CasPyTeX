@@ -1,4 +1,7 @@
-for x in range(11,100):
-	bytom=(x%10)*10+x//10
-	if (bytom-x)/x==3/4:
-		print(x)
+class Esben:
+	def __init__(self):
+
+		pass
+hej=["hej","hej"]
+if type(hej)=="class 'list'":print("HEJ")
+print(type(hej))

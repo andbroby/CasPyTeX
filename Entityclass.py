@@ -912,7 +912,6 @@ def SimplifyAll(instance,focus):
 				retvar.append(testy)
 		if retvar==[]:
 			retvar=[instance]
-
 		return [n.tolatex() for n in retvar if (not n.__eq__(instance,False))]
 	debug(2,"SimplifyAll fik input: "+instance.tostring())
 	newsimplify=instance.simplifyallparts(focus).evalsimplify()

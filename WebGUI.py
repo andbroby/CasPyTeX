@@ -11,8 +11,8 @@ PORT = 8080
 def post_simplify(str):
     exp=cas.TextToCAS(str)
     result=exp.simplify("ThisIsForTheLatexCompiler")
-    #if type(result)==type(cas.TextToCAS("a")):
-    #    result=[result.tolatex()]
+    if type(result)==type(cas.TextToCAS("a")):
+        result=[result.tolatex()]
     retval="SIMPL#"+exp.tolatex()
     for n in result:
         retval+=r"#\("+n+r"\)"

@@ -62,10 +62,11 @@ def TextToCAS(instring,recursions=0):
 		debug(3,recursions*"    "+origin+" er et \"noegent\" tal")
 		return Entities.number([instring])
 debug.lvl=0
-a=TextToCAS("2*(3*x+3)")
-#print(a.tostring())
-b=a.tostring()
+if __name__=="__main__":
+	a=TextToCAS("2*(3*x+3)")
+	#print(a.tostring())
+	b=a.tostring()
 
-a=a.expand()
-print("DONE WITH SIMPLIFY")
-print("INPUT:"+b+"\n"+"RESULT:"+a.tostring())#+"\nApprox: " +a.approx().tostring())
+	a=a.expand()
+	print("DONE WITH SIMPLIFY")
+	print("INPUT:"+b+"\n"+"RESULT:"+a.tostring())#+"\nApprox: " +a.approx().tostring())

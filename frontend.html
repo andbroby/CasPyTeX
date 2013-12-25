@@ -4,17 +4,37 @@
 </head>
 <body>
 <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [["$","$"],["\\(","\\)"]]
+    }
+  });
 </script>
 <script type="text/javascript"
-  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
+   src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script type="text/javascript">
 
 function xml_http_post(url, data, callback) {
-    var req = false;    
-    req = new XMLHttpRequest();
-
+    var req = false;
+    try {
+        // Firefox, Opera 8.0+, Safari
+        req = new XMLHttpRequest();
+    }
+    catch (e) {
+        // Internet Explorer
+        try {
+            req = new ActiveXObject("Msxml2.XMLHTTP");
+        }
+        catch (e) {
+            try {
+                req = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            catch (e) {
+                alert("Your browser does not support AJAX!");
+                return false;
+            }
+        }
+    }
     req.open("POST", url, true);
     req.onreadystatechange = function() {
         if (req.readyState == 4) {
@@ -23,26 +43,48 @@ function xml_http_post(url, data, callback) {
     }
     req.send(data);
 }
+//#SAFEVAL1#=simplify
+//#SAFEVAL2#=solve
 
 function test_button() {
-    var data = document.test_form.test_text.value;           
-    xml_http_post("frontend.html", data, test_handle)
+    var data ="#SAFEVAL1#"+document.test_form.test_text.value;           
+    xml_http_post("frontend.html", data, test_handle);
 }
 
 function test_handle(req) {
+    //alert(req.responseText)
     var elem = document.getElementById('test_result')
-    elem.innerHTML =  req.responseText
-    alert req.responseText
+    resarr=req.responseText.split("#")
+    if (resarr[0]==="SIMPL"){
+        elem.innerHTML+="<br>Simplifying Input:<br><center>\\("+resarr[1]+"\\)</center><br>Possible Forms:";
+        for (index=2;index<resarr.length;++index) {
+            console.log(resarr[index])
+            elem.innerHTML+="<br><center>"+resarr[index]+"</center>"
+        };
+    };
+    //elem.innerHTML+="<br>\\("+req.responseText+"\\)"
+    var math = document.getElementById("test_result");
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,math]);
 }
-
+function clear_element() {
+    var elem = document.getElementById('test_result')
+    elem.innerHTML=""
+}
+function solve_button() {
+    var data ="#SAFEVAL2#"+document.test_form.test_text.value;           
+    xml_http_post("frontend.html", data, test_handle);
+}
+//xml_http_post("frontend.html","asdfsd",test_handle);
 </script>
 
 <form name=test_form>
-<input type="text" name="test_text" value="0" size="4">
+<input type="text" name="test_text" value="asdfsdf" size="100">
 
 <input type=button onClick="test_button();" value="Simplify" title="Simplify">
-<span id="test_result">0</span>
+<input type=button onClick="solve_button();" value="Solve" title="Solve">
+<input type=button value="Clear" onClick="clear_element();" value="Clear" title="Clear">
 </form>
-\(\sin^2\theta + \cos^2\theta=1\)
+<span id="test_result"></span>
+
 </body>
 </html>
