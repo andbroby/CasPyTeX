@@ -50,7 +50,10 @@ class product:
 	def delfactor(self,index):
 		copy=self.factors[:]
 		copy.pop(index)
+		if copy==[]:
+			return number(["1"])
 		if len(copy)==1:return copy[0]
+
 		return product(copy)
 	def maxleveloftree(self,level=0):
 		
@@ -241,6 +244,35 @@ class product:
 		print("   "*rec+"PRODUCT: "+self.tostring())
 		for n in self.factors:
 			n.printtree(rec+1)
+	def fractionasfactor(self,focus=None): #ganger hele tal op til nævner, eller brøker med brøker
+		for in1,factor1 in enumerate(self.factors):
+			for in2,factor2 in enumerate(self.factors):
+				if in1==in2:continue
+				rununialg=False
+				if factor1.type()=="division" and factor2.type()=="division":
+					newnumerator=product([factor1.numerator,factor2.numerator])
+					newdenom=product([factor1.denominator,factor2.denominator])
+					unified=division([newnumerator,newdenom])
+					newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
+		#			print(self.tostring(), "TO", product(newfactors).tostring())
+					return maybeclass(newfactors,product)
+				elif factor1.type()=="division":
+					rununialg=True
+					frac=factor1
+					side=factor2
+				elif factor2.type()=="division":
+					rununialg=False
+					frac=factor2
+					side=factor1
+				if rununialg:
+					if side.evaluable():
+						newnumerator=product([side,frac.numerator])
+						newdenom=frac.denominator
+						unified=division([newnumerator,newdenom])
+						newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
+						return maybeclass(newfactors,product)
+		return False
+
 class number:
 	def __init__(self,arr):
 		self.arr=arr
@@ -254,7 +286,7 @@ class number:
 	def tolatex(self):
 		
 		return self.num
-	def simplify(self,focus=None):###
+	def simplify(self,focus=None,thrd=0):###
 		"""if self.evaluable():
 			if float(self.num)%1==0:
 				return number([str(int(float(self.num)))])"""
@@ -476,9 +508,9 @@ class division:
 	def tolatex(self):
 		
 		return r"\frac{"+self.numerator.tolatex()+"}{"+self.denominator.tolatex()+"}"
-	def simplify(self,focus=None):#
+	def simplify(self,focus=None,thrd=0):#
 		
-		return SimplifyAll(self,focus)
+		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
 		
 		return max([n.maxleveloftree(level+1) for n in [self.numerator,self.denominator]])
@@ -584,6 +616,62 @@ class division:
 		print("   "*rec+"DIVISION: "+self.tostring())
 		for n in [self.numerator,self.denominator]:
 			n.printtree(rec+1)
+	def shortfract(self,focus=None): #forkorter brøker hvis de kan
+		if self.numerator.type()=="product":
+			if self.denominator.type()=="product":
+				newnumerator=self.numerator.evalpart()
+				newdenom=self.denominator.evalpart()
+			else:
+				newnumerator=self.numerator.evalpart()
+				newdenom=self.denominator
+			if newnumerator.type()=="product":
+				if newdenom.type()=="product":
+					shortnum=newnumerator.factors[0]
+					shortdenom=newdenom.factors[0]
+					if shortnum.evaluable() and shortdenom.evaluable():
+						evaluablefract=division([shortnum,shortdenom]).evalsimplify()
+						if evaluablefract.numerator!=number(["1"]):
+							newnumerator.factors[0]=evaluablefract.numerator
+						else:
+							newnumerator=newnumerator.delfactor(0)
+						if evaluablefract.denominator!=number(["1"]):
+							newdenom.factors[0]=evaluablefract.denominator
+						else:
+							newdenom=newdenom.delfactor(0)
+						return division([newnumerator,newdenom])
+				else:
+					pass
+		return False
+	def cancelfactors(self,focus=None): #b*a/b => b etc etc
+		if self.numerator.type()=="product":
+			if self.denominator.type()=="product":
+				for in1,fact1 in enumerate(self.numerator.factors):
+					for in2,fact2 in enumerate(self.numerator.factors):
+						if fact1==fact2:
+							numerfactors=self.numerator.delfactor(in1)
+							denomfactors=self.denominator.delfactor(in2)
+							return division([numerfactors,denomfactors])
+			else:
+				fact2=self.denominator
+				for in1,fact1 in enumerate(self.numerator.factors):
+					if fact1==fact2:
+						newfacts=self.numerator.delfactor(in1)
+						if type(newfacts)!=type(list()):
+							return newfacts
+						return maybeclass(newfacts,product)
+		else:
+			if self.denominator.type()=="product":
+				fact2=self.numerator
+				for in1,fact1 in enumerate(self.denominator.factors):
+					if fact1==fact2:
+						newfacts=self.denominator.delfactor(in1)
+						if type(newfacts)!=type(list()):
+							return division([number(["1"]),newfacts])
+						return division([number(["1"]),maybeclass(newfacts,product)])
+			else:
+				if self.numerator==self.denominator:
+					return number(["1"])
+		return False
 class addition:
 	def __init__(self,arr):
 		self.arr=arr
@@ -892,69 +980,6 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			raise ValueError("869 - Expected instance")
 		break
 	return treesimplify(treesimplify(newinstance).evalsimplify())
-def ExpandAll2(instance):
-	if True:
-		if instance.type()=="number":
-			return instance
-		elif instance.type()=="product":
-			newfactors=[]
-			for factor in instance.factors:
-				newfactors.append(factor.expand())
-			newinstance=maybeclass(newfactors,product)
-		elif instance.type()=="addition":
-			newaddends=[]
-			for addend in instance.addends:
-				newaddends.append(addend.expand())
-			newinstance=maybeclass(newaddends,addition)
-		elif instance.type()=="potens":
-			newrootandexp=[]
-			for n in [instance.root,instance.exponent]:
-				newrootandexp.append(n.expand())
-			newinstance=maybeclass(newrootandexp,potens)
-		elif instance.type()=="division":
-			newnumanddenom=[]
-			for n in [instance.numerator,instance.denominator]:
-				newnumanddenom.append(n.expand())
-			newinstance=maybeclass(newnumanddenom,division) #expandallparts
-	if instance.type()=="addition":
-		
-		pass	
-	if instance.type()=="product":
-		distributexp=newinstance.distributive("force")
-		if distributexp!=False:
-			return ExpandAll(distributexp)
-	if instance.type()=="division":
-		
-		pass
-	if instance.type()=="number":
-		
-		pass
-	if instance.type()=="potens":
-		nomialexp=newinstance.nomials()
-		if nomialexp!=False:
-			return ExpandAll(nomialexp)
-	if newinstance.type()=="addition":
-		if newinstance.associativeprop(None)!=False:
-			newinstance=newinstance.associativeprop(None)
-		while True:
-			testy=newinstance.NonIntrusiveAntiDistributive(None)
-			if testy!=False:
-				newinstance=testy
-				if newinstance.type()!="addition":
-					break
-			else:
-				break
-	if newinstance.type()=="product":
-		if newinstance.ntimes0(None)!=False:
-
-			newinstance=newinstance.ntimes0(None)
-	if newinstance.type()=="product":
-		if newinstance.associativeprop(None)!=False:
-			newinstance=newinstance.associativeprop(None)
-	if newinstance.type()=="product":
-		if newinstance.ntimes0(None)!=False:
-			newinstance=newinstance.ntimes0(None)
-	return newinstance.evalsimplify()
 
 def treesimplify(instance): #simplifies trees (via the 2 associativeprop() functions)
 	if True: #simplifyparts

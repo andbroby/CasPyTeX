@@ -9,9 +9,10 @@ def unittest(filename,approx=False):
 	for problem in problems:
 		if problem[0]=="#":continue
 		errors+=problemtest(problem,approx)
+	numofproblems=len(problems)
 	print(filename.replace(".test","")+"test results: "+str(errors)+" errors out of "+str(len(problems))+" problems"+ "\n")
 	f.close()
-	return errors
+	return [errors, numofproblems]
 def problemtest(problem,approx=False):
 	parts=problem.split("\"")
 	parts=[parts[1],parts[3],parts[5]]
@@ -29,18 +30,20 @@ def problemtest(problem,approx=False):
 		print("ERROR:Tried to simplify: "+inputstr+"\n    CAS returned         : "+returningstr+"\n    But the answer was   : "+resultstr)
 		return 1
 	return 0
-errors=0
-errors+=unittest("Antidistributive.test")
-errors+=unittest("Samerootofexponent.test")
-errors+=unittest("sameexponentfrac.test")
-errors+=unittest("sameroot.test")
-errors+=unittest("antisameroot.test")
-errors+=unittest("antisameexponentfrac.test")
-errors+=unittest("sameexponent.test")
-errors+=unittest("distributive.test")
-errors+=unittest("antisameexponent.test")
-errors+=unittest("Mixed.test")
+errors=[0,0]
+def vecadd(a,b):
+	return [a[0]+b[0],a[1]+b[1]]
+errors=vecadd(errors,unittest("Antidistributive.test"))
+errors=vecadd(errors,unittest("Samerootofexponent.test"))
+errors=vecadd(errors,unittest("sameexponentfrac.test"))
+errors=vecadd(errors,unittest("sameroot.test"))
+errors=vecadd(errors,unittest("antisameroot.test"))
+errors=vecadd(errors,unittest("antisameexponentfrac.test"))
+errors=vecadd(errors,unittest("sameexponent.test"))
+errors=vecadd(errors,unittest("distributive.test"))
+errors=vecadd(errors,unittest("antisameexponent.test"))
+errors=vecadd(errors,unittest("Mixed.test"))
 
 print("\nSTARTING APPROX TESTS\n")
-errors+=unittest("Approx.test",True)
-print("TOTAL ERRORS:",errors)
+errors=vecadd(errors,unittest("Approx.test",True))
+print("Unittest finished: "+str(errors[0])+" errors out of "+str(errors[1])+" problems")

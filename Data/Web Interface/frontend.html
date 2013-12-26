@@ -1,10 +1,10 @@
 <html>
 <head>
-<link rel="shortcut icon"
- href="titleico.png" />
+
 <title>CasPyTeX</title>
 </head>
 <body>
+<link rel="icon" href="/favicon.ico" />
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
     tex2jax: {
@@ -76,14 +76,13 @@ function solve_button() {
     var data ="#SAFEVAL2#"+document.test_form.test_text.value;           
     xml_http_post("frontend.html", data, test_handle);
 }
-//xml_http_post("frontend.html","asdfsd",test_handle);
 </script>
 
 
 
 <center><img src="Apollonian_gasket.svg"  height="200" width="200"></center>
 
-<center><img src="logo.png" </center>
+<center><img src="logo.png" type="image/x-png" </center>
 <form name=test_form>
 <center><input type="text" name="test_text" value="" size="100"></center>
 
