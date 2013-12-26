@@ -61,10 +61,10 @@ def TextToCAS(instring,recursions=0):
 	else:
 		debug(3,recursions*"    "+origin+" er et \"noegent\" tal")
 		return Entities.number([instring])
-debug.lvl=2
+debug.lvl=0
 if __name__=="__main__":
 	#a=TextToCAS("2*(3*x^2+2)-6*x^2")
-	a=TextToCAS("a/(a*c)")
+	a=TextToCAS("(2*a)/(3*a)")
 	#print(a.tostring())
 	b=a.tostring()
 	a=a.simplify()

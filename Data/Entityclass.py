@@ -638,7 +638,9 @@ class division:
 							newdenom.factors[0]=evaluablefract.denominator
 						else:
 							newdenom=newdenom.delfactor(0)
-						return division([newnumerator,newdenom])
+						retval=division([newnumerator,newdenom])
+						if not retval.__eq__(self,False):
+							return division([newnumerator,newdenom])
 				else:
 					pass
 		return False
@@ -646,11 +648,15 @@ class division:
 		if self.numerator.type()=="product":
 			if self.denominator.type()=="product":
 				for in1,fact1 in enumerate(self.numerator.factors):
-					for in2,fact2 in enumerate(self.numerator.factors):
+					for in2,fact2 in enumerate(self.denominator.factors):
 						if fact1==fact2:
 							numerfactors=self.numerator.delfactor(in1)
 							denomfactors=self.denominator.delfactor(in2)
-							return division([numerfactors,denomfactors])
+							if type(numerfactors)!=type(list()):
+								numerfactors=[numerfactors]
+							if type(denomfactors)!=type(list()):
+								denomfactors=[denomfactors]
+							return division([maybeclass(numerfactors,product),maybeclass(denomfactors,product)])
 			else:
 				fact2=self.denominator
 				for in1,fact1 in enumerate(self.numerator.factors):
@@ -878,7 +884,7 @@ class addition:
 									if not factor1.evaluable(True):
 										resten1=addend1.delfactor(in1)
 										resten2=addend2.delfactor(in2)
-										print("OIOIOI",resten1.evaluable(True),resten2.evaluable(True))
+
 										if resten1.evaluable(True) and resten2.evaluable(True):
 											newfront=addition([resten1,resten2])
 											unified=product([newfront,factor1])
@@ -1007,7 +1013,6 @@ def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify p
 		retvar=[]
 		expanded=instance.expand()
 		if not expanded.__eq__(instance,False):
-			print("EXPAND ADDED",expanded.tostring())
 			retvar.append(expanded)
 		for focus1 in instance.findvariables()+[None]:
 			testsimp=SimplifyAll(instance,number([focus1]))
@@ -1059,8 +1064,7 @@ def maybeclass(arr,classfunc):
 		return arr[0]
 	elif len(arr)>1:
 		return classfunc(arr)
-	else:
-		return 1/0
+
 def newnumber(arr):
 	num=arr[0]
 	if num=="-1":

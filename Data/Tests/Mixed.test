@@ -26,3 +26,4 @@
 "(a*c)/(a*b)" "c/b" "None"
 "(a*c)/a" "c" "None"
 "a/(a*c)" "1/c" "None"
+"(2*a)/(3*a)" "2/3" "None"
