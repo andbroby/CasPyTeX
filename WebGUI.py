@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, 'Data/')
 import textparser as cas
 
-FILE = 'frontend.html'
+FILE = 'Data/Web Interface/frontend.html'
 PORT = 8080
 def post_simplify(str):
     exp=cas.TextToCAS(str)
