@@ -779,7 +779,6 @@ class addition:
 		return ExpandAll(self)
 	def NonIntrusiveAntiDistributive(self,focus=None):
 		breakitall=False
-		print("OI")
 		for index1,addend1 in enumerate(self.addends):
 			for index2,addend2 in enumerate(self.addends):
 				if index1==index2:continue
@@ -787,9 +786,7 @@ class addition:
 					if addend2.type()=="product":
 						for in1,factor1 in enumerate(addend1.factors):
 							for in2,factor2 in enumerate(addend2.factors):
-								print(factor1.tostring(),factor2.tostring())
 								if factor1==factor2:
-									print("OI")
 									if not factor1.evaluable(True):
 										resten1=addend1.delfactor(in1)
 										resten2=addend2.delfactor(in2)
@@ -855,7 +852,6 @@ number
 potens
 """
 def ExpandAll(instance): #Expands and simplifies (a little)
-	print(instance.tostring())
 	newinstance=treesimplify(instance)
 	while True:
 		if newinstance.type()=="addition":
@@ -864,7 +860,6 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			testy=newinstance.NonIntrusiveAntiDistributive(None)
 			if testy!=False:
 				newinstance=testy
-				print("antidist")
 				continue
 		elif newinstance.type()=="product":
 			newinstance=maybeclass([ExpandAll(n) for n in newinstance.factors],product)
@@ -872,17 +867,14 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			distributexp=newinstance.distributive("force")
 			if distributexp!=False:
 				newinstance=distributexp
-				print("dist")
 				continue
 			ntime0exp=newinstance.ntimes0(None)
 			if ntime0exp!=False:
 				newinstance=ntime0exp
-				print("times0")
 				continue
 			evalpartexp=newinstance.evalpart(None)
 			if evalpartexp.tostring()!=newinstance.tostring():
 				newinstance=evalpartexp
-				print("evalpart")
 				continue
 		elif newinstance.type()=="potens":
 			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.root,newinstance.exponent]],potens)
@@ -890,7 +882,6 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			nomialexp=newinstance.nomials()
 			if nomialexp!=False:
 				newinstance=nomialexp
-				print("nomial")
 				continue
 		elif newinstance.type()=="division":
 			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.numerator,newinstance.denominator]],division)
@@ -900,7 +891,6 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 		else:
 			raise ValueError("869 - Expected instance")
 		break
-	print(instance.tostring(),"TO",treesimplify(newinstance).evalsimplify().tostring())
 	return treesimplify(treesimplify(newinstance).evalsimplify())
 def ExpandAll2(instance):
 	if True:
@@ -987,9 +977,7 @@ def treesimplify(instance): #simplifies trees (via the 2 associativeprop() funct
 #Simplificeringsmetoder
 SimplifyClassdict=dict() #kommer til at indeholde som index typen af klassen (produkt fx) og saa en array af simplificeringsmetoder som strings
 def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify på strings, 2 er for latex
-	#instance.printtree()
 	instance=treesimplify(instance)
-	#instance.printtree()
 	if specialsimp in [1,2]:
 		retvar=[]
 		expanded=instance.expand()
