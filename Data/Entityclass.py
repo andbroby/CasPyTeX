@@ -93,7 +93,26 @@ class product:
 				newretval+=n.factors
 			else:
 				newretval.append(n)
+		retval=maybeclass(newretval,product)
+		if retval.moveconstantsinfront()!=False:
+			retval=retval.moveconstantsinfront()
 		return maybeclass(newretval,product)
+	def moveconstantsinfront(self,focus=None):
+		print("STARTED",self.tostring())
+		toputback=[]
+		toputinfront=[]
+		factorwindex=[[self.factors[k],k] for k in range(len(self.factors))]
+		for factor in factorwindex:
+			print(factor[0].tostring(),factor[0].evaluable(True))
+			if factor[0].evaluable(True):
+				toputinfront.append(factor)
+			else:
+				toputback.append(factor)
+		newfactors=toputinfront+toputback
+		if [n[1] for n in newfactors]!=[n[1] for n in factorwindex]:
+			print("done",self.tostring(),"to",product([n[0] for n in newfactors]).tostring())
+			return product([n[0] for n in newfactors])
+		return False
 	def simplifyallparts(self,focus):
 		newparts=[]
 		for n in self.factors:
@@ -240,6 +259,8 @@ class product:
 		return False
 	def expand(self):
 		return ExpandAll(self)
+	def posforms(self,stringortex,approx=False):
+		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+"PRODUCT: "+self.tostring())
 		for n in self.factors:
@@ -327,6 +348,8 @@ class number:
 		return []
 	def expand(self):
 		return self
+	def posforms(self,stringortex,approx=False):
+		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+self.num)
 class potens:
@@ -485,6 +508,8 @@ class potens:
 		return False
 	def expand(self):
 		return ExpandAll(self)
+	def posforms(self,stringortex,approx=False):
+		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+"POTENS: "+self.tostring())
 		for n in [self.root,self.exponent]:
@@ -612,6 +637,9 @@ class division:
 	def expand(self):
 		
 		return ExpandAll(self)
+	def posforms(self,stringortex,approx=False):
+		
+		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+"DIVISION: "+self.tostring())
 		for n in [self.numerator,self.denominator]:
@@ -934,7 +962,8 @@ class addition:
 		print("   "*rec+"ADDITION: "+self.tostring())
 		for n in self.addends:
 			n.printtree(rec+1)
-
+	def posforms(self,stringortex,approx=False):
+		return posformsimplify(self,stringortex,approx)
 
 
 
@@ -966,9 +995,17 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			if ntime0exp!=False:
 				newinstance=ntime0exp
 				continue
-			evalpartexp=newinstance.evalpart(None)
+			evalpartexp=newinstance.evalpart()
 			if evalpartexp.tostring()!=newinstance.tostring():
 				newinstance=evalpartexp
+				continue
+			fractionexp=newinstance.fractionasfactor()
+			if fractionexp!=False:
+				newinstance=fractionexp
+				continue
+			moveinexp=newinstance.moveconstantsinfront()
+			if moveinexp!=False:
+				newinstance=moveinexp
 				continue
 		elif newinstance.type()=="potens":
 			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.root,newinstance.exponent]],potens)
@@ -980,6 +1017,10 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 		elif newinstance.type()=="division":
 			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.numerator,newinstance.denominator]],division)
 			newinstance=treesimplify(newinstance)
+			fract2exp=newinstance.cancelfactors()
+			if fract2exp!=False:
+				newinstance=fract2exp
+				continue
 		elif newinstance.type()=="number":
 			pass
 		else:
@@ -1002,11 +1043,38 @@ def treesimplify(instance): #simplifies trees (via the 2 associativeprop() funct
 	if newinstance.type()=="addition" or newinstance.type()=="product":
 		if newinstance.associativeprop(None)!=False:
 			newinstance=newinstance.associativeprop(None)
+	if newinstance.type()=="product":
+		if newinstance.moveconstantsinfront()!=False:
+			newinstance=newinstance.moveconstantsinfront()
 	return newinstance
 
 
 #Simplificeringsmetoder
 SimplifyClassdict=dict() #kommer til at indeholde som index typen af klassen (produkt fx) og saa en array af simplificeringsmetoder som strings
+def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for tex
+	instance=treesimplify(instance)
+	retvar=[]
+	expanded=instance.expand()
+	if not expanded.__eq__(instance,False):
+		retvar.append(expanded)
+	for focus1 in instance.findvariables()+[None]:
+		testsimp=SimplifyAll(instance,number([focus1]))
+		willbeadded=True
+		for alreadyfound in retvar:
+			if testsimp.__eq__(alreadyfound,False):
+				willbeadded=False
+				break
+		if willbeadded and not testsimp.__eq__(instance,False):
+			retvar.append(testsimp)
+	if retvar==[]:
+		retvar.append(instance)
+	if approx:
+		retvar=[n.approx() for n in retvar]
+
+	if stringortex==1:
+		return [n.tostring() for n in retvar]
+	elif stringortex==2:
+		return [n.tolatex() for n in retvar]
 def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify på strings, 2 er for latex
 	instance=treesimplify(instance)
 	if specialsimp in [1,2]:

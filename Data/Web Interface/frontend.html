@@ -19,7 +19,7 @@
 function xml_http_post(url, data, callback) {
     var req = false;
     try {
-        // Firefox, Opera 8.0+, Safari
+        // Firefox, Opera 8.0+, Safari, Chrome
         req = new XMLHttpRequest();
     }
     catch (e) {
@@ -48,8 +48,8 @@ function xml_http_post(url, data, callback) {
 //#SAFEVAL1#=simplify
 //#SAFEVAL2#=solve
 
-function test_button() {
-    var data ="#SAFEVAL1#"+document.test_form.test_text.value;           
+function simplify_button() {
+    var data ="#SAFEVAL1"+ApproxIsChecked()+document.test_form.test_text.value;           
     xml_http_post("frontend.html", data, test_handle);
 }
 
@@ -73,8 +73,17 @@ function clear_element() {
     elem.innerHTML=""
 }
 function solve_button() {
-    var data ="#SAFEVAL2#"+document.test_form.test_text.value;           
+    var data ="#SAFEVAL2"+ApproxIsChecked()+document.test_form.test_text.value;           
     xml_http_post("frontend.html", data, test_handle);
+}
+function ApproxIsChecked() {
+    var x=document.getElementById('approxcheck')
+    if (x.checked){
+        return "#1#";
+    }
+    else{
+        return "#0#";
+    }
 }
 </script>
 
@@ -88,9 +97,12 @@ function solve_button() {
 
 
 <center>
-<input type=button onClick="test_button();" value="Simplify" title="Simplify">
+
+<input type=button onClick="simplify_button();" value="Simplify" title="Simplify">
 <input type=button onClick="solve_button();" value="Solve" title="Solve">
 <input type=button value="Clear" onClick="clear_element();" value="Clear" title="Clear">
+<input id="approxcheck" type="checkbox" name="vehicle" value="Approx">Approximate results<br>
+
 </center>
 </form>
 <span id="test_result"></span>
