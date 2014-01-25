@@ -5,6 +5,7 @@ import sys
 from os import getcwd
 import textparser
 import Entityclass as Entities
+import time
 #Read from config, change any relevant values
 """
 try:
@@ -33,7 +34,7 @@ for line in [n.replace("\n","") for n in configfile.readlines()]:
 class logfile:
 	def __init__(self,filename):
 		self.lines=["Filename:  "+str(filename)+"\n"]
-		self.filename=filename+".log"
+		self.filename=filename+".CASlog"
 	def appendline(self,rawstr):
 		self.lines.append(rawstr+"\n")
 	def writetofile(self):
@@ -63,10 +64,11 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			logger.logit("Definition Error adding key "+matstr+  " to dict (bad key?)")
 			return [False,"Definition Error adding key "+matstr+  " to dict (bad key?)"]
 	else:#can only simplify
+		print("interpreted matstr",matstr)
+
 		origexp=textparser.TextToCAS(matstr)
 		returnline=r"\["+origexp.tolatex()
 		simplified=origexp.posforms(0,approx)[0]
-		print("ORIG",origexp.tostring(),"simplified",simplified.tostring())
 		if simplified!=origexp:
 			returnline+="="+r"\color{blue}"+simplified.tolatex()+"}"
 		returnline+=r"\]"
@@ -77,7 +79,7 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 
 def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n" bag på
 	texfile=LatexFile(filename,getcwd())
-
+	starttime=time.time()
 	maketitle=False
 	forceappendline=False
 	lastlinewasnormal=True
@@ -203,6 +205,8 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 					newline+=char
 			texfile.addline(newline)
 			lastlinewasnormal=True
+	print("CAS calls and typesetting took "+str(time.time()-starttime)+" seconds")
+	logger.logit("CAS calls and typesetting took "+str(time.time()-starttime)+" seconds")
 	texfile.compiletolatex()
 
 #filename="test.cpt"

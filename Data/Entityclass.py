@@ -21,6 +21,7 @@ const_e =math.e
 				methodfile=open("Data/Simplify Methods/"+newsimplify.type()+".simplifymethods")
 			except:
 				raise ValueError("Could not find the .simplifymethod files")"""
+configfile=False
 try:
 
 	configfile=open(sys.argv[0].replace("TextCAS.py","")+"config.cfg")
@@ -31,22 +32,23 @@ except:
 
 	except:
 		pass
-		#print("OIOIOIOIOI",sys.argv[0])
-		raise ValueError("NO CONFIG FOUND, BREAKING")
-for line in [n.replace("\n","") for n in configfile.readlines()]:	
-			if line[0]=="#":continue
-			try:
-				var=line.split("=")[0]
-				val=line.split("=")[1]
-				if var=="Use_Radians":
-					if val=="True":
-						Use_Radians=True
-					elif val=="False":
-						Use_Radians=False
-				if var=="Decimal_Places":
-					dec_places=int(val)
-			except:
-				continue
+		print("NO config FOUND!!!")
+		#raise ValueError("NO CONFIG FOUND, BREAKING")
+if configfile!=False:
+	for line in [n.replace("\n","") for n in configfile.readlines()]:	
+				if line[0]=="#":continue
+				try:
+					var=line.split("=")[0]
+					val=line.split("=")[1]
+					if var=="Use_Radians":
+						if val=="True":
+							Use_Radians=True
+						elif val=="False":
+							Use_Radians=False
+					if var=="Decimal_Places":
+						dec_places=int(val)
+				except:
+					continue
 class definitiondict:
 	def __init__(self):
 		
@@ -465,7 +467,6 @@ class number:
 		
 		print("   "*rec+self.num)
 	def makepossiblesubstitutions(self):
-		print("OIOIOIOIIOOIOI")
 		testifsubavailable=subdict.findsubstitute(self)
 		if testifsubavailable!=False:
 			return testifsubavailable.makepossiblesubstitutions()
@@ -975,6 +976,7 @@ class addition:
 			return maybeclass(newnewaddends,addition)
 		else:
 			summedup=[newnumber([str(evaluedsum)])]+newnewaddends
+			return maybeclass(summedup,addition)
 	def evalpart(self,approx=False):
 		newarr=[]
 		summy=0
@@ -1279,7 +1281,6 @@ def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify p
 	debug(2,"SimplifyAll fik input: "+instance.tostring())
 	newsimplify=instancecopy.simplifyallparts(focus).evalsimplify()
 	debug(2,"SIMPLIFYING DONE FROM "+instance.tostring()+" to "+newsimplify.tostring())
-
 	try:
 		
 		Simplifyingmethods=SimplifyClassdict[newsimplify.type()]

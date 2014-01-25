@@ -1,4 +1,4 @@
-
+import os
 from sys import platform
 from subprocess import call
 class LatexFile:
@@ -31,7 +31,7 @@ class LatexFile:
 		self.writetofile()
 		if platform=="win32":
 			call(["ls"],shell=True,cwd=self.path)
-			call([r'pdflatex','-interaction=nonstopmode',self.filename],shell=True,cwd=self.path)
+			call([r'pdflatex','-interaction=nonstopmode',self.filename],shell=True,cwd=self.path,stdout=open(os.devnull,'wb'))
 		else:
 			callstr="cd \"LaTeX Files\";pdflatex -interaction=nonstopmode "+self.filename
 			call([callstr],shell=True,cwd=self.path) 

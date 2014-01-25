@@ -121,9 +121,9 @@ def TextToCAS(instring,recursions=0):
 debug.lvl=0
 if __name__=="__main__":
 	print(Entities.subdict.adddefinition(Entities.number(["a"]),Entities.number(["2"])))
-	a=TextToCAS("2*a")
-	a=a.simplify()
+	a=TextToCAS("(k+d)^3")
+	a=a.posforms(1)
 #	print(a.tostring())
-	print(a.tolatex())
+	print(a)
 	print("DONE WITH SIMPLIFY")
 	#print("INPUT:"+b+"\n"+"RESULT:",a)#+"\nApprox: " +a.approx().tostring())
