@@ -465,6 +465,7 @@ class number:
 		
 		print("   "*rec+self.num)
 	def makepossiblesubstitutions(self):
+		print("OIOIOIOIIOOIOI")
 		testifsubavailable=subdict.findsubstitute(self)
 		if testifsubavailable!=False:
 			return testifsubavailable.makepossiblesubstitutions()
@@ -1225,7 +1226,7 @@ def treesimplify(instance): #simplifies trees (via the 2 associativeprop() funct
 SimplifyClassdict=dict() #kommer til at indeholde som index typen af klassen (produkt fx) og saa en array af simplificeringsmetoder som strings
 subdict=definitiondict()
 
-def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for tex
+def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for tex 0 for instance
 	instancecopy=deepcopy(instance)
 	instancecopy=instancecopy.makepossiblesubstitutions()
 	instancecopy=treesimplify(instancecopy)
@@ -1246,8 +1247,9 @@ def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for te
 		retvar.append(instancecopy)
 	if approx:
 		retvar=[n.approx() for n in retvar]
-
-	if stringortex==1:
+	if stringortex==0:
+		return retvar
+	elif stringortex==1:
 		return [n.tostring() for n in retvar]
 	elif stringortex==2:
 		return [n.tolatex() for n in retvar]

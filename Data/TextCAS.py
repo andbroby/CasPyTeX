@@ -65,9 +65,8 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 	else:#can only simplify
 		origexp=textparser.TextToCAS(matstr)
 		returnline=r"\["+origexp.tolatex()
-		simplified=origexp.simplify()
-		if approx:
-			simplified=simplified.approx()
+		simplified=origexp.posforms(0,approx)[0]
+		print("ORIG",origexp.tostring(),"simplified",simplified.tostring())
 		if simplified!=origexp:
 			returnline+="="+r"\color{blue}"+simplified.tolatex()+"}"
 		returnline+=r"\]"
