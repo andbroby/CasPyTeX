@@ -30,7 +30,6 @@ class LatexFile:
 	def compiletolatex(self):
 		self.writetofile()
 		if platform=="win32":
-			call(["ls"],shell=True,cwd=self.path)
 			call([r'pdflatex','-interaction=nonstopmode',self.filename],shell=True,cwd=self.path,stdout=open(os.devnull,'wb'))
 		else:
 			callstr="cd \"LaTeX Files\";pdflatex -interaction=nonstopmode "+self.filename
