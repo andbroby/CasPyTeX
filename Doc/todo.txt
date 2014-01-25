@@ -1,4 +1,11 @@
 Der skal være en metode hvormed tal benævnes ie skal det være 2*a+b eller b+2*a (Se OmTekstOutput.txt)
 
-Regneregler med brøker: a*(n/p)=(a*n)/p og brøk gange brøk (OG HVORNÅR DET SKAL GØRES)
-SPECIELLE FUNKTIONER (SINX COSX SQRT(X) LOG(X)) 
+
+Specielle værdier for sinus og cosinus (noget med gange pi, ya know)
+database over konstanter og enheder (HASTER)
+brøkregneregel: (a^5*b)/(a^3*c)=(a^2*b)/c (HASTER HASTER)
+regneregler for logaritmer
+regneregler for kvadratrod (HUSK POTENS 0.5)
+regneregler for trig (HASTER IKKE)
+Hvorfor bliver sin(x+x) ikke til sin(2x)????? (HASTER HASTER HASTER HASTER)
+sin((a+b)^2) giver fejl (HASTER*10)

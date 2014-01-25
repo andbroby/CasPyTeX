@@ -1,1 +1,1 @@
-print("#SAFEVAL1#1#asdfsdf"[12:])
+print("||asdfasdf||"[2:-2])

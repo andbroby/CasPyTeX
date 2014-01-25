@@ -47,6 +47,63 @@ def TextToCAS(instring,recursions=0):
 			exit()
 		debug(3,recursions*"    "+origin+" bliver til POTENS "+str(splitstringbyindexes(instring,eksponenttegn)) )
 		return Entities.potens([TextToCAS(n,recursions+1) for n in splitstringbyindexes(instring,eksponenttegn)])
+	#saa funktioner
+	for index,char in enumerate(instring):
+		allowedchars=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+		if char=="(" and instring[index-1] in allowedchars:
+			startbracket=index
+			#proceeds to find the string that defines the function, ie sin(2x)
+			for indexk in range(index-1,-1,-1):
+				if instring[indexk] not in allowedchars or indexk==0:
+					functstart=indexk
+					break
+			bracketoffset=1
+			for indexk in range(index+1,len(instring)):
+				if instring[indexk]=="(":
+					bracketoffset+=1
+				elif instring[indexk]==")":
+					bracketoffset-=1
+					if bracketoffset==0:
+						funcend=indexk
+						break
+			funcstring=instring[functstart:startbracket]
+			insidebrackets=instring[startbracket+1:funcend]
+			#print(funcstring,insidebrackets)
+			if funcstring=="sin":
+				debug(3,recursions*"    "+origin+" bliver til Sine: "+insidebrackets )
+
+				return Entities.sine([TextToCAS(insidebrackets,recursions+1)])
+			elif funcstring=="cos":
+				debug(3,recursions*"    "+origin+" bliver til Cosine: "+insidebrackets )
+				return Entities.cosine([TextToCAS(insidebrackets,recursions+1)])
+			elif funcstring=="tan":
+				debug(3,recursions*"    "+origin+" bliver til Tangent: "+insidebrackets )
+				return Entities.tangent([TextToCAS(insidebrackets,recursions+1)])
+
+			elif funcstring=="arcsin" or funcstring=="asin":
+				debug(3,recursions*"    "+origin+" bliver til Arcsine: "+insidebrackets )
+				return Entities.arcsine([TextToCAS(insidebrackets,recursions+1)])
+			elif funcstring=="arccos" or funcstring=="acos":
+				debug(3,recursions*"    "+origin+" bliver til Arccosine: "+insidebrackets )
+				return Entities.arccosine([TextToCAS(insidebrackets,recursions+1)])
+			elif funcstring=="arctan" or funcstring=="atan":
+				debug(3,recursions*"    "+origin+" bliver til Arctangent: "+insidebrackets )
+				return Entities.arctangent([TextToCAS(insidebrackets,recursions+1)])
+
+			elif funcstring=="ln" or funcstring=="Ln":
+				debug(3,recursions*"    "+origin+" bliver til Natlogarithm: "+insidebrackets )
+				return Entities.natlogarithm([TextToCAS(insidebrackets,recursions+1)])
+			elif funcstring=="log" or funcstring=="Log":
+				debug(3,recursions*"    "+origin+" bliver til comlogarithm: "+insidebrackets )
+				return Entities.comlogarithm([TextToCAS(insidebrackets,recursions+1)])
+
+			elif funcstring=="sqrt":
+				debug(3,recursions*"    "+origin+" bliver til squareroot: "+insidebrackets )
+				return Entities.squareroot([TextToCAS(insidebrackets,recursions+1)])
+			raise ValueError("UNKNOWN FUNCTION"+funcstring)
+
+
+
 	if "+" in instring or "*" in instring or "/" in instring or "(" in instring or ")" in instring:
 		#print("OIOI",instring,ydersteparentes(stringtoparentespar(instring))[0])
 		if instring[0]=="-" and ydersteparentes(stringtoparentespar(instring))[0]==1 and ydersteparentes(stringtoparentespar(instring))[1]==len(instring)-1:
@@ -61,18 +118,12 @@ def TextToCAS(instring,recursions=0):
 	else:
 		debug(3,recursions*"    "+origin+" er et \"noegent\" tal")
 		return Entities.number([instring])
-debug.lvl=2
+debug.lvl=0
 if __name__=="__main__":
-	#a=TextToCAS("2*(3*x^2+2)-6*x^2")
-	print(TextToCAS("(1/3)").evaluable(False))
-	#a=TextToCAS("2*((1/3)*x+1/2)")
-	a=TextToCAS("x*2/3")
-	#print(a.tostring())
-	b=a.tostring()
-	a=a.posforms(1)
-
-	#print(a[1].addends)
-	#a.printtree()
-
+	print(Entities.subdict.adddefinition(Entities.number(["a"]),Entities.number(["2"])))
+	a=TextToCAS("2*a")
+	a=a.simplify()
+#	print(a.tostring())
+	print(a.tolatex())
 	print("DONE WITH SIMPLIFY")
-	print("INPUT:"+b+"\n"+"RESULT:",a)#+"\nApprox: " +a.approx().tostring())
+	#print("INPUT:"+b+"\n"+"RESULT:",a)#+"\nApprox: " +a.approx().tostring())

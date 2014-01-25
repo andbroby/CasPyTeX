@@ -1,0 +1,79 @@
+#? Title=CasPyTeX TextCAS Tutorial
+#? date=
+TextCAS is a CAS written in a text file, then compiled to LaTeX. The Syntax is inspired by markdown. Tutorial.cpt is the source for this .pdf.
+#?startlatex
+\begin{center}\textbf{Preamble Examples}\end{center}
+#?endlatex
+You write the Title, Author and date of the paper like this:
+#?startlatex
+\begin{verbatim}
+ #?Title=Name of the paper
+ #?Author=Author of the paper
+ #?Date=Date
+\end{verbatim}
+#?endlatex
+If no Title is specified, Then none of the 3 informations will be printed to the paper. 
+If no Author is specified, Then it won't be printed to the paper.
+If no date is specified, the current date will be printed. If this is not wanted, you can always write nothing after the equal sign.
+#?startlatex
+\begin{center}\textbf{Syntax Examples}\end{center}
+#?endlatex
+This is the big heading
+=======================
+The big heading will appear in these two ways:
+
+#?startlatex
+
+\begin{verbatim}
+This is the big heading
+==================
+\end{verbatim}
+or
+\begin{verbatim}
+##This is the big heading
+\end{verbatim}
+#?endlatex
+This is the small heading
+-----------------
+The small heading can also be called in two ways:
+#?startlatex
+\begin{verbatim}
+This is the small heading
+---------------
+\end{verbatim}
+or
+\begin{verbatim}
+#This is the small heading
+\end{verbatim}
+#?endlatex
+
+You can write *italic* or **bold**
+syntax:
+#?startlatex
+\begin{verbatim}
+You can write *italic* or **bold**
+\end{verbatim}
+#?endlatex
+
+However, sometimes you may want to include something that isn't implemented through the standard syntax. Maybe you want to write in a table, like this:
+#?startlatex
+\begin{center}
+  \begin{tabular}{ l | c || r }
+    \hline
+    1 & 2 & 3 \\ \hline
+    4 & 5 & 6 \\ \hline
+    7 & 8 & 9 \\
+    \hline
+  \end{tabular}
+\end{center}
+#?endlatex
+Everytime you want to write \LaTeX, just sorround the lines with:
+#?startlatex
+\begin{verbatim}
+  #?startlatex
+\end{verbatim}
+and
+\begin{verbatim}
+  #?endlatex
+\end{verbatim}
+#?endlatex
