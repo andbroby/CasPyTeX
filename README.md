@@ -21,6 +21,7 @@ Dependencies
 -------------
 - Python3.x
 - MiKTeX (pdflatex needs to be in path)
+
 Installation
 --------------
 1. Download and unzip the .zip of the repository
