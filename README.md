@@ -1,13 +1,28 @@
-CAS-v3
-------------
+CasPyTeX
+------------------------------
+**It's still in development.**
+
 This is a simple CAS with different interfaces capable of outputting in LaTeX.
 
-It's still in development.
+Right now, it has a working web interface which is opened by WebGUI.py
 
-The CAS runs in python3.x
+It also features a .cpt interpreter. The syntax of a .cpt (CasPyTex) file is showed in Doc/TextCAS Tutorial/tutorial.cpt.pdf . It's a lot like markdown.
 
-##To do##
+The project is developed just for the fun of it. The code is not  well-written.
 
-- Support for functions
-- A favicon for the Web Interface
-- A guide for the Web Interface
+
+To-do
+-------------
+- More simplifying methods for functions (trig, logs and sqrt)
+- An equation solver
+- support for smart units (Make the CAS know that 1km=100m)
+
+Dependencies
+-------------
+- Python3.x
+- MiKTeX (pdflatex needs to be in path)
+Installation
+--------------
+1. Download and unzip the .zip of the repository
+2. Run WebGUI.py for the webinterface to run as a server on LOCALHOST
+3. Run Data/TextCAS.py with a .cpt file as an example 

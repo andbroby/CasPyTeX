@@ -5,6 +5,7 @@ class LatexFile:
 	def __init__(self,filename="Test.tex",path=r"Latex Files"):
 		if ".tex" not in filename:
 			filename+=".tex"
+		self.notex=filename[:-4]
 		self.filename=filename
 		self.path=path
 		#if os.path.exists(filename):
@@ -30,9 +31,13 @@ class LatexFile:
 	def compiletolatex(self):
 		self.writetofile()
 		if platform=="win32":
-			call([r'pdflatex','-interaction=nonstopmode',self.filename],shell=True,cwd=self.path,stdout=open(os.devnull,'wb'))
+			diditwork=call([r'pdflatex','-interaction=nonstopmode',self.filename],shell=True,cwd=self.path,stdout=open(os.devnull,'wb'))
 		else:
-			callstr="cd \"LaTeX Files\";pdflatex -interaction=nonstopmode "+self.filename
-			call([callstr],shell=True,cwd=self.path) 
+			callstr="pdflatex -interaction=nonstopmode "+self.filename
+			diditwork=call([callstr],shell=True,cwd=self.path,stdout=open(os.devnull,'wb')) 
+		for line in open(self.path+"/"+self.notex+".log").readlines():
+			if "Output written on" in line:
+				return True
+		return False
 	def clean(self):
 		self.lines=[r'\documentclass{article}'+"\n",r'\begin{document}'+"\n",r'\subsection{Esbens Maskine}'+"\n",r'\end{document}'+"\n"]

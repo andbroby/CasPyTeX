@@ -6,31 +6,34 @@ from os import getcwd
 import textparser
 import Entityclass as Entities
 import time
-#Read from config, change any relevant values
-"""
-try:
-	
-	configfile=open("config.cfg")
-except:
-	try:
-		configfile=open("Data/config.cfg")
-	except:
-		raise ValueError("NO CONFIG FOUND, BREAKING")
-for line in [n.replace("\n","") for n in configfile.readlines()]:	
-	if line[0]=="#":continue
-	try:
-		var=line.split("=")[0]
-		val=line.split("=")[1]
-		if var=="Use_Radians":
-			if val=="True":
-				Use_Radians=True
-			elif val=="False":
-				Use_Radians=False
-		if var=="Decimal_Places":
-			dec_places=int(val)
-	except:
-		continue
-"""
+import CasPyTexConfig as config
+def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the nicest both args in expressions, not list
+	#sort away the inputstr
+	newposformoutput=[n for n in posformoutput if n!=inputstr]
+	#sort by treedepth
+	if newposformoutput==[]:
+		return inputstr
+	print(newposformoutput)
+	print("inputstr",inputstr.tostring(),"OUTPUT",[[n.tostring(),n.getsimplifyscore()] for n in newposformoutput])
+	nicest=newposformoutput[0]
+	nicestgetreturn=newposformoutput[0].getsimplifyscore()
+	for n in newposformoutput:
+		values=n.getsimplifyscore()
+		if values[0]<nicestgetreturn[0]:
+			nicest=n
+			nicestgetreturn=values
+			continue
+		elif values[0]==nicestgetreturn[0]:
+			if values[1]<nicestgetreturn[1]:
+				nicest=n
+				nicestgetreturn=values
+				continue
+			elif values[1]==nicestgetreturn[1]:
+				if len(n.tostring())>len(nicest.tostring()):
+					nicest=n
+					nicestgetreturn=values
+
+	return nicest
 class logfile:
 	def __init__(self,filename):
 		self.lines=["Filename:  "+str(filename)+"\n"]
@@ -43,7 +46,6 @@ class logfile:
 	def logit(self,rawstr):
 		self.appendline(rawstr)
 		self.writetofile()
-
 def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to show it or not
 	if ":=" in matstr:
 		beforeafterdefinition=matstr.split(r":=")
@@ -64,21 +66,27 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			logger.logit("Definition Error adding key "+matstr+  " to dict (bad key?)")
 			return [False,"Definition Error adding key "+matstr+  " to dict (bad key?)"]
 	else:#can only simplify
-		print("interpreted matstr",matstr)
-
+		print("interpreting matstr",matstr)
 		origexp=textparser.TextToCAS(matstr)
-		returnline=r"\["+origexp.tolatex()
-		simplified=origexp.posforms(0,approx)[0]
-		if simplified!=origexp:
-			returnline+="="+r"\color{blue}"+simplified.tolatex()+"}"
-		returnline+=r"\]"
+		nicest=picknicestsimplification(origexp.makepossiblesubstitutions(),origexp.posforms(0,approx))
+		returnline=r"\["+origexp.tolatex()+"="+config.Use_Coloredoutput*r"\color{"+config.Use_Coloredoutput*config.Color_of_output+config.Use_Coloredoutput*"}"+nicest.tolatex(True)+r"\]"
 		return [True,returnline]
-		pass
+		#returnline=r"\["+origexp.tolatex()
+		#simplified=origexp.posforms(0,approx)[0]
+		#if simplified!=origexp:
+		#	returnline+="="+r"\color{blue}"+simplified.tolatex()+"}"
+		#returnline+=r"\]"
+		#return [True,returnline]
 
 
 
 def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n" bag på
-	texfile=LatexFile(filename,getcwd())
+	path=getcwd()
+	Truefilename=filename
+	if "/" in filename:
+		Truefilename=filename.split("/")[-1]
+		path="".join([n+"/" for n in filename.split("/")[:-1]][:])
+	texfile=LatexFile(Truefilename,path)
 	starttime=time.time()
 	maketitle=False
 	forceappendline=False
@@ -139,16 +147,34 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 				continue
 			#We cut away #? and spaces
 			cuttedline=""
-			aftertheequalsign=False #no spaces removed after "="
+			aftertheequalsign=False #no spaces removed after text has begun
 			for n in line[2:]:
 				if n!=" " or aftertheequalsign:
-					if n=="=":
+					if n!=" ":
 						aftertheequalsign=True
 
 					cuttedline+=n
+			while cuttedline[-1]==" ":
+				cuttedline=cuttedline[:-1]
 			#we split it into the variable and the value
 			varandval=cuttedline.split("=")
+
 			if len(varandval)!=2:
+				if len(varandval)==1:
+					command=varandval[0]
+					if command=="forgetall":
+						Entities.subdict.wipedict()
+					elif len(command)>6 and command[:6]=="forget":
+						forgetvar=command[6:]
+						while forgetvar[0]==" ":
+							forgetvar=forgetvar[1:]
+						while forgetvar[-1]==" ":
+							forgetvar=forgetvar[:-1]
+						try:
+							print("\n\n\nOI",forgetvar,"\n\n\n")
+							Entities.subdict.forgetdefinition(Entities.number([forgetvar]))
+						except:
+							pass
 				logger.logit("skipped line"+str(index+1)+"because of bad #? statement")
 				continue
 			variable=varandval[0]
@@ -159,9 +185,34 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 					maketitle=True
 				texfile.addtopreamble(r"\title{"+value+r"}")
 			elif variable in ["Author","author"]:
+				
 				texfile.addtopreamble(r"\author{"+value+r"}")
 			elif variable in ["Date","date"]:
+				
 				texfile.addtopreamble(r"\date{"+value+r"}")
+			elif variable in ["Use_Radians"]:
+				if value in ["True","true"]:
+					config.Use_Radians=True
+				elif value in ["False","false"]:
+					config.Use_Radians=False
+			elif variable in ["Decimal_Places"]:
+				try:
+					decplaces=int(variable)
+					config.Decimal_Places=decplaces
+				except:
+					pass
+			elif variable in ["Use_Coloredoutput"]:
+				if value in ["True","true"]:
+					config.Use_Coloredoutput=True
+				elif value in ["False","false"]:
+					config.Use_Coloredoutput=False
+			elif variable in ["Color_of_output"]:
+				if value in config.Colors:
+					config.Color_of_output=value
+#Use_Coloredoutput=True
+#Color_of_output="red"
+
+
 			lastlinewasnormal=False
 		elif line[0]=="#":
 			if line[1]=="#":
@@ -188,6 +239,7 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 					skipnext=False
 					continue
 				if char=="*":
+#					print("LINE",line)
 					if line[index+1]=="*":
 						skipnext=True
 						newline+=r"\textbf{"
@@ -207,8 +259,13 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 			lastlinewasnormal=True
 	print("CAS calls and typesetting took "+str(time.time()-starttime)+" seconds")
 	logger.logit("CAS calls and typesetting took "+str(time.time()-starttime)+" seconds")
-	texfile.compiletolatex()
-
+	compileresult=texfile.compiletolatex()
+	if compileresult==True:
+		print("Succesfully compiled to .pdf!")
+		logger.logit("Succesfully compiled to .pdf!")
+	else:
+		print("compilation Error")
+		logger.logit("Compilation error")
 #filename="test.cpt"
 #f=open("TextCAS/"+filename)
 #cpttolatex([n.replace("\n","") for n in f.readlines()],"test.cpt")
@@ -216,13 +273,20 @@ if __name__=="__main__":
 	if len(argv)!=2:
 		print("Bad arg, exiting")
 	filename=argv[1]
+	if filename[-4:]!=".cpt":
+		print("This is not a .cpt file, exiting")
+		sys.exit()
 	logger=logfile(filename)
 	try:
-		print(getcwd()+"/"+filename)
 		cptfile=open(getcwd()+"/"+filename)
+		isfullpath=False
 	except:
-		print("No such file exists, exiting")
-		sys.exit()
+		try:
+			cptfile=open(filename)
+			isfullpath=True
+		except:
+			print("No such file exists, exiting")
+			sys.exit()
 	lines=[n.replace("\n","") for n in cptfile.readlines()]
 	cpttolatex(lines,filename)
 

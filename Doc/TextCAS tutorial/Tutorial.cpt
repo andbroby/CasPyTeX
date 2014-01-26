@@ -15,6 +15,13 @@ You write the Title, Author and date of the paper like this:
 If no Title is specified, Then none of the 3 informations will be printed to the paper. 
 If no Author is specified, Then it won't be printed to the paper.
 If no date is specified, the current date will be printed. If this is not wanted, you can always write nothing after the equal sign.
+
+Any option in CasPyTeXConfig.py can be overwritten like this:
+#?startlatex
+\begin{verbatim}
+ #?Use_Radians=False
+\end{verbatim}
+#?endlatex
 #?startlatex
 \begin{center}\textbf{Syntax Examples}\end{center}
 #?endlatex
@@ -55,7 +62,7 @@ You can write *italic* or **bold**
 \end{verbatim}
 #?endlatex
 
-However, sometimes you may want to include something that isn't implemented through the standard syntax. Maybe you want to write in a table, like this:
+However, sometimes you may want to include something that isn't implemented through the standard syntax. Maybe you want to write a table, like this:
 #?startlatex
 \begin{center}
   \begin{tabular}{ l | c || r }
@@ -67,7 +74,7 @@ However, sometimes you may want to include something that isn't implemented thro
   \end{tabular}
 \end{center}
 #?endlatex
-Everytime you want to write \LaTeX, just sorround the lines with:
+Everytime you want to write \LaTeX, just surround the lines with:
 #?startlatex
 \begin{verbatim}
   #?startlatex
@@ -77,3 +84,58 @@ and
   #?endlatex
 \end{verbatim}
 #?endlatex
+
+#?startlatex
+\begin{center}\section*{The CAS}\end{center}
+#?endlatex
+Defining a value:
+|a:=2*_pi|
+syntax:
+
+#?startlatex
+\begin{verbatim}
+    |a:=2*_pi|
+\end{verbatim}
+#?endlatex
+
+Calculating a value:
+|2*a^2|
+\newpage syntax:
+#?startlatex
+\begin{verbatim}
+    |2*a^2|
+\end{verbatim}
+#?endlatex
+Approximations:
+||sqrt(2)||
+syntax:
+#?startlatex
+\begin{verbatim}
+    ||sqrt(2)||
+\end{verbatim}
+#?endlatex
+Already defined values can be forgotten like this:
+#?startlatex
+\begin{verbatim}
+  #?forget a
+\end{verbatim}
+#?endlatex
+#?forget a
+|a|
+Let's say you have a bunch of definitions, like this:
+|p_{1}:=11|
+|p_{2}:=13|
+|p_{3}:=17|
+|p_{4}:=19|
+If you want to delete them all, just write:
+#?startlatex
+\begin{verbatim}
+  #?forgetall
+\end{verbatim}
+#?endlatex
+#?forgetall
+|p_{1}|
+|p_{2}|
+|p_{3}|
+|p_{4}|
+Now they're all gone. But remember that the CAS only forgets the definitions from **now on**.

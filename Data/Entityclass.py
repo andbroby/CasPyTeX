@@ -4,51 +4,12 @@ import sys
 from fractions import gcd
 from copy import deepcopy
 import math
-
-Use_Radians=True
-dec_places=2
+import CasPyTexConfig as config
+Use_Radians=config.Use_Radians
+dec_places=config.Decimal_Places
 const_pi=math.pi
 const_e =math.e
-#Loading config
-"""	try:
-		
-		Simplifyingmethods=SimplifyClassdict[newsimplify.type()]
-	except KeyError:
-		try:
-			methodfile=open("Simplify Methods/"+newsimplify.type()+".simplifymethods")
-		except:
-			try:
-				methodfile=open("Data/Simplify Methods/"+newsimplify.type()+".simplifymethods")
-			except:
-				raise ValueError("Could not find the .simplifymethod files")"""
-configfile=False
-try:
 
-	configfile=open(sys.argv[0].replace("TextCAS.py","")+"config.cfg")
-except:
-	try:
-		configfile=open("Data/config.cfg")
-		
-
-	except:
-		pass
-		print("NO config FOUND!!!")
-		#raise ValueError("NO CONFIG FOUND, BREAKING")
-if configfile!=False:
-	for line in [n.replace("\n","") for n in configfile.readlines()]:	
-				if line[0]=="#":continue
-				try:
-					var=line.split("=")[0]
-					val=line.split("=")[1]
-					if var=="Use_Radians":
-						if val=="True":
-							Use_Radians=True
-						elif val=="False":
-							Use_Radians=False
-					if var=="Decimal_Places":
-						dec_places=int(val)
-				except:
-					continue
 class definitiondict:
 	def __init__(self):
 		
@@ -105,11 +66,13 @@ class product:
 		for n in newfactors:
 			if n.type()=="addition":
 				returnstring+="("+n.tostring()+")*"
+			elif n.type()=="number" and n.isunit and returnstring[-1]=="*":
+				returnstring=returnstring[:-1]+n.tostring()+"*"
 			else:
 				returnstring+=n.tostring()+"*"
 		if returnstring[-1]=="*":returnstring=returnstring[:-1]
 		return returnstring
-	def tolatex(self):
+	def tolatex(self,roundit=False):
 		returnstring=""
 		minuscounter=0
 		newfactors=[]
@@ -121,9 +84,13 @@ class product:
 		returnstring="-"*(minuscounter%2)
 		for n in newfactors:
 			if n.type()=="addition":
-				returnstring+=r"\left("+n.tolatex()+r"\right)\cdot "
+				returnstring+=r"\left("+n.tolatex(roundit)+r"\right)\cdot "
+			elif n.type()=="number" and n.isunit and len(returnstring)>=6 and returnstring[-6:]==r"\cdot ":
+				returnstring=returnstring[:-6]+r"\;"+n.tolatex(roundit)+r"\cdot "
+			elif n.type()=="number" and n.isunit:
+				returnstring+=r"\;"+n.tolatex(roundit)+r"\cdot"
 			else:
-				returnstring+=n.tolatex()+r"\cdot "
+				returnstring+=n.tolatex(roundit)+r"\cdot "
 		if returnstring[-6:]==r"\cdot ":returnstring=returnstring[:-6]
 		return returnstring
 	def simplify(self,focus=None,thrd=0):###
@@ -156,13 +123,16 @@ class product:
 				nonevaluableparts.append(n)
 		evalfactor=1
 		for n in evalparts:
-			evalfactor*=float(n.num)
+			evalfactor*=eval(n.tostring())
 		if evalfactor%1==0:
 			evalfactor=int(evalfactor)
+		if nonevaluableparts==[]:
+			return newnumber([str(evalfactor)])
 		if evalfactor==1:
 			return maybeclass(nonevaluableparts,product)
 		else:
 			return maybeclass([newnumber([str(evalfactor)])]+nonevaluableparts,product)
+	
 	def evalpart(self,approx=False):
 		newarr=[]
 		proddy=1
@@ -185,7 +155,7 @@ class product:
 			else:
 				newretval.append(n)
 		retval=maybeclass(newretval,product)
-		if retval.moveconstantsinfront()!=False:
+		if retval.type=="product" and retval.moveconstantsinfront()!=False:
 			retval=retval.moveconstantsinfront()
 		return maybeclass(newretval,product)
 	def moveconstantsinfront(self,focus=None):
@@ -389,24 +359,37 @@ class product:
 			return maybeclass(newfactors,product).makepossiblesubstitutions()
 		else:
 			return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),len(self.factors)]
 class number:
 	def __init__(self,arr):
 		self.arr=arr
 		self.num=arr[0]
+		if self.num[0]=="_":
+			self.isunit=True
+		else:
+			self.isunit=False
 	def type(self):
 		
 		return "number"
 	def tostring(self,substitute=False):
 		if self.num=="_pi":
 			return "pi"
-		if self.num=="_e":
+		elif self.num=="_e":
 			return "e"
 		return self.num
-	def tolatex(self):
+	def tolatex(self,roundit=False):
 		if self.num=="_pi":
 			return r"\pi"
-		if self.num=="_e":
+		elif self.num=="_e":
 			return "e"
+		elif self.num[0]=="_":
+			return r"\textrm{"+self.num[1:]+"}"
+		if roundit==True and self.evaluable():
+			rounded=round(float(self.num),dec_places)
+			if rounded%1==0:
+				rounded=int(rounded)
+			return str(rounded)
 		return self.num
 	def simplify(self,focus=None,thrd=0):###
 		"""if self.evaluable():
@@ -471,6 +454,8 @@ class number:
 		if testifsubavailable!=False:
 			return testifsubavailable.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [1,1]
 class potens:
 	def __init__(self,arr):
 		self.arr=arr
@@ -493,13 +478,13 @@ class potens:
 		if returnstring[-1]=="^":
 			returnstring=returnstring[:-1]
 		return returnstring
-	def tolatex(self):
+	def tolatex(self,roundit=False):
 		returnstring=""
 		if self.root.type()!="number":
-			returnstring+=r"\left("+self.root.tolatex()+r"\right)^"
+			returnstring+=r"\left("+self.root.tolatex(roundit)+r"\right)^"
 		else:
-			returnstring+=self.root.tolatex()+"^"
-		returnstring+="{"+self.exponent.tolatex()+"}"
+			returnstring+=self.root.tolatex(roundit)+"^"
+		returnstring+="{"+self.exponent.tolatex(roundit)+"}"
 		if returnstring[-1]=="^":
 			returnstring=returnstring[:-1]
 		return returnstring
@@ -521,7 +506,7 @@ class potens:
 		newroot=self.root.evalsimplify(approx)
 		newexponent=self.exponent.evalsimplify(approx)
 		if newroot.evaluable(approx) and newexponent.evaluable(approx):
-			evaluated=float(newroot.num)**float(newexponent.num)
+			evaluated=eval(newroot.tostring())**eval(newexponent.tostring())
 			if evaluated%1==0:
 				evaluated=int(evaluated)
 			if approx==False and evaluated%1!=0:
@@ -567,7 +552,7 @@ class potens:
 		return False
 	def antisameexponent(self,focus): #(b*c)^a=b^a*c^a
 		if self.root.type()=="product":
-			if focus!=None and self.root.contains(focus.tostring()):
+			if focus==None or focus!=None and self.root.contains(focus.tostring()):
 				newprod=[]
 				for n in self.root.factors:
 					newprod.append(potens([n,self.exponent]))
@@ -642,6 +627,8 @@ class potens:
 		if maybeclass(newarr,potens)!=self:
 			return maybeclass(newarr,potens).makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),2]
 class division:
 	def __init__(self,arr):
 		self.arr=arr
@@ -658,9 +645,9 @@ class division:
 		if "*" in naevner or "+" in naevner or "-" in naevner or "/" in naevner:
 			naevner="("+naevner+")"
 		return taeller+"/"+naevner
-	def tolatex(self):
+	def tolatex(self,roundit=False):
 		
-		return r"\frac{"+self.numerator.tolatex()+"}{"+self.denominator.tolatex()+"}"
+		return r"\frac{"+self.numerator.tolatex(roundit)+"}{"+self.denominator.tolatex(roundit)+"}"
 	def simplify(self,focus=None,thrd=0):#
 		
 		return SimplifyAll(self,focus,thrd)
@@ -683,19 +670,20 @@ class division:
 		newdenom=self.denominator.evalsimplify(approx)
 		if approx:
 			if newnum.evaluable(approx) and newdenom.evaluable(approx):
-				evaluated=float(newnum.num)/float(newdenom.num)
+				evaluated=eval(newnum.tostring())/eval(newdenom.tostring())
 				if evaluated%1==0:
 					evaluated=int(evaluated)
 				return newnumber([str(evaluated)])
+			return self
 		elif approx==False:
 			if newnum.evaluable(approx) and newdenom.evaluable(approx):
-				approxeval=float(newnum.num)/float(newdenom.num)
+				approxeval=eval(newnum.tostring())/eval(newdenom.tostring())
 				if approxeval%1==0:
 					approxeval=int(approxeval)
 					return newnumber([str(approxeval)])
-				elif float(newnum.num)%1==0 and float(newdenom.num)%1==0:
-					nummy=int(newnum.num)
-					denommy=int(newdenom.num)
+				elif eval(newnum.tostring())%1==0 and eval(newdenom.tostring())%1==0:
+					nummy=int(newnum.tostring())
+					denommy=int(newdenom.tostring())
 					lcf=gcd(nummy,denommy)
 					return division([newnumber([str(nummy//lcf)]),newnumber([str(denommy//lcf)])])
 				else:
@@ -742,16 +730,68 @@ class division:
 			return product([number(["-1"]),self.numerator])
 		else:
 			return False
+	def samerootofexponentfactors(self,focus=None): #same thing as samerootofexponent, just with factors
+		if self.numerator.type()=="product" and self.denominator.type()=="product":
+			appendtofactors=[]
+			skiptheseids=[]
+			breakall=False
+			for numfact in self.numerator.factors:
+				for denomfact in self.denominator.factors:
+					#create newfraction
+					createfract=division([numfact,denomfact])
+					if createfract.samerootofexponent(focus)!=False:
+						skiptheseids+=[id(numfact),id(denomfact)]
+						appendtofactors.append(createfract.samerootofexponent(focus))
+						breakall=True
+						break
+				if breakall:
+					break
+			newnum=maybeclass(appendtofactors+[n for n in self.numerator.factors if id(n) not in skiptheseids],product)
+			newdenom=maybeclass([n for n in self.denominator.factors if id(n) not in skiptheseids],product)
+			return maybeclass([newnum,newdenom],division)
+		elif self.numerator.type()=="product":
+			skipthisindex=False
+			for index,numfact in enumerate(self.numerator.factors):
+				createfract=division([numfact,self.denominator]).samerootofexponent(focus)
+				if createfract!=False:
+					appendtofactors=createfract
+					skipthisindex=index
+					break
+			if skipthisindex!=False:
+				newfactors=[createfract]
+				for n in range(len(self.numerator.factors)):
+					if n!=skipthisindex:
+						newfactors.append(self.numerator.factors[n])
+				return maybeclass(newfactors,product)
+		elif self.denominator.type()=="product":
+			skipthisindex=False
+			for index,denomfact in enumerate(self.denominator.factors):
+				createfract=division([self.numerator,denomfact]).samerootofexponent(focus)
+				if createfract!=False:
+					appendtonum=createfract
+					skipthisindex=index
+					break
+			if skipthisindex!=False:
+				newdenoms=[]
+				for n in range(len(self.denominator.factors)):
+					if n!=skipthisindex:
+						newdenoms.append(self.denominator.factors[n])
+				newnum=maybeclass([appendtonum,self.numerator],product)
+				newdenom=maybeclass(newdenoms,product)
+				return maybeclass([newnum,newdenom],division)
+		return False
 	def samerootofexponent(self,focus=None): #a^b/a^c=a^(b-c)
 		debug(3,"samerootofexponent fik input: "+str(self.tostring()))
 		if self.numerator.type()=="potens" and self.denominator.type()=="potens":
-			if self.numerator.rootandexponents[0]==self.denominator.rootandexponents[0] and (focus==None or focus==self.denominator.rootandexponents[0] or addition([maybeclass(self.numerator.rootandexponents[1:],potens),product([number(["-1"]),maybeclass(self.denominator.rootandexponents[1:],potens)])]).contains(focus.tostring())==False):
-				newroot=self.numerator.rootandexponents[0]
-				sum1=self.numerator.rootandexponents[1:]
-				sum2=self.denominator.rootandexponents[1:]
-				newexponent=addition([maybeclass(sum1,potens),product([number(["-1"]),maybeclass(sum2,potens)])])
-				debug(3,"samerootofexponent output: "+potens([newroot,newexponent]).tostring())
-				return potens([newroot,newexponent])
+			#OLDif self.numerator.rootandexponents[0]==self.denominator.rootandexponents[0] and (focus==None or focus==self.denominator.rootandexponents[0] or addition([maybeclass(self.numerator.rootandexponents[1:],potens),product([number(["-1"]),maybeclass(self.denominator.rootandexponents[1:],potens)])]).contains(focus.tostring())==False):
+			if self.numerator.root==self.denominator.root:
+				if (focus!=None and self.numerator.root.contains(focus.tostring())) or (self.numerator.exponent.evaluable(True) and self.denominator.exponent.evaluable(True)):
+					newroot=self.numerator.rootandexponents[0]
+					sum1=self.numerator.rootandexponents[1:]
+					sum2=self.denominator.rootandexponents[1:]
+					newexponent=addition([maybeclass(sum1,potens),product([number(["-1"]),maybeclass(sum2,potens)])])
+					debug(3,"samerootofexponent output: "+potens([newroot,newexponent]).tostring())
+					return potens([newroot,newexponent])
 		return False
 	def antisameexponentfrac(self,focus=None): #b^a/c^a=(b/c)^a
 		if self.numerator.type()=="potens" and self.denominator.type()=="potens":
@@ -793,6 +833,8 @@ class division:
 					shortdenom=newdenom.factors[0]
 					if shortnum.evaluable() and shortdenom.evaluable():
 						evaluablefract=division([shortnum,shortdenom]).evalsimplify()
+						if evaluablefract.type()=="number":
+							evaluablefract=division([evaluablefract,number(["1"])])
 						if evaluablefract.numerator!=number(["1"]):
 							newnumerator.factors[0]=evaluablefract.numerator
 						else:
@@ -848,6 +890,8 @@ class division:
 		if maybeclass(newarr,division)!=self:
 			return maybeclass(newarr,division).makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),2]
 class addition:
 	def __init__(self,arr):
 		self.arr=arr
@@ -861,9 +905,9 @@ class addition:
 			if mathstring!="" and n[0]!="-":mathstring+="+"
 			mathstring+=n
 		return mathstring
-	def tolatex(self):
+	def tolatex(self,roundit=False):
 		mathstring=""
-		for n in [n.tolatex() for n in self.arr]:
+		for n in [n.tolatex(roundit) for n in self.arr]:
 			if mathstring!="" and n[0]!="-":mathstring+="+"
 			mathstring+=n
 		return mathstring
@@ -967,11 +1011,13 @@ class addition:
 		newnewaddends=[]
 		for n in newaddends:
 			if n.evaluable(approx):
-				evaluedsum+=float(n.num)
+				evaluedsum+=eval(n.tostring())
 			else:
 				newnewaddends.append(n)
 		if evaluedsum%1==0:
 			evaluedsum=int(evaluedsum)
+		if newnewaddends==[]:
+			return newnumber([str(evaluedsum)])
 		if evaluedsum==0:
 			return maybeclass(newnewaddends,addition)
 		else:
@@ -1120,7 +1166,8 @@ class addition:
 		if maybeclass(newarr,addition)!=self:
 			return maybeclass(newarr,addition).makepossiblesubstitutions()
 		return self
-
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),len(self.addends)]
 
 """
 product
@@ -1232,12 +1279,25 @@ def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for te
 	instancecopy=deepcopy(instance)
 	instancecopy=instancecopy.makepossiblesubstitutions()
 	instancecopy=treesimplify(instancecopy)
+	if instancecopy.type()=="number":
+		if stringortex==1:
+			return [instancecopy.tostring()]
+		elif stringortex==2:
+			return [instancecopy.tolatex()]
+		elif stringortex==0:
+			return [instancecopy]
 	retvar=[]
 	expanded=instancecopy.expand()
 	if not expanded.__eq__(instancecopy,False):
 		retvar.append(expanded)
 	for focus1 in instancecopy.findvariables()+[None]:
-		testsimp=SimplifyAll(instancecopy,number([focus1]))
+		if None==focus1:
+			focus2=None
+		else:
+			print(focus1,instancecopy.findvariables()+[None])
+			focus2=number([focus1])
+		instancecopy.printtree()
+		testsimp=SimplifyAll(instancecopy,focus2)
 		willbeadded=True
 		for alreadyfound in retvar:
 			if testsimp.__eq__(alreadyfound,False):
@@ -1245,10 +1305,12 @@ def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for te
 				break
 		if willbeadded and not testsimp.__eq__(instancecopy,False):
 			retvar.append(testsimp)
+	print("RETVAR",[n.tostring() for n in retvar])
 	if retvar==[]:
 		retvar.append(instancecopy)
 	if approx:
 		retvar=[n.approx() for n in retvar]
+	print("AFTER APPROX",retvar)
 	if stringortex==0:
 		return retvar
 	elif stringortex==1:
@@ -1259,13 +1321,19 @@ def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify p
 	instancecopy=deepcopy(instance)
 	instancecopy=instancecopy.makepossiblesubstitutions()
 	instancecopy=treesimplify(instancecopy)
+	if instancecopy.type()=="number" and specialsimp==0:
+		return instancecopy
 	if specialsimp in [1,2]:
 		retvar=[]
 		expanded=instancecopy.expand()
 		if not expanded.__eq__(instancecopy,False):
 			retvar.append(expanded)
 		for focus1 in instancecopy.findvariables()+[None]:
-			testsimp=SimplifyAll(instancecopy,number([focus1]))
+			if None==focus1:
+				focus2=None
+			else:
+				focus2=number([focus1])
+			testsimp=SimplifyAll(instancecopy,focus2)
 			willbeadded=True
 			for alreadyfound in retvar:
 				if testsimp.__eq__(alreadyfound,False):
@@ -1331,8 +1399,8 @@ class sine:
 		return "sine"
 	def tostring(self,substitute=False):
 		return "sin("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\sin\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\sin\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1346,9 +1414,9 @@ class sine:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.sin(float(newarg.num))
+				realnum=math.sin(eval(newarg.tostring()))
 			else:
-				realnum=math.sin(const_pi/180*float(newarg.num))
+				realnum=math.sin(const_pi/180*eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1390,12 +1458,14 @@ class sine:
 		print("   "*rec+"sine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval=sine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class cosine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1405,8 +1475,8 @@ class cosine:
 		return "cosine"
 	def tostring(self,substitute=False):
 		return "cos("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\cos\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\cos\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1420,9 +1490,9 @@ class cosine:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.cos(float(newarg.num))
+				realnum=math.cos(eval(newarg.tostring()))
 			else:
-				realnum=math.cos(const_pi/180*float(newarg.num))
+				realnum=math.cos(const_pi/180*eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1463,12 +1533,14 @@ class cosine:
 		print("   "*rec+"cosine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= cosine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class tangent:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1478,8 +1550,8 @@ class tangent:
 		return "tangent"
 	def tostring(self,substitute=False):
 		return "tan("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\tan\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\tan\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1493,9 +1565,9 @@ class tangent:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.tan(float(newarg.num))
+				realnum=math.tan(eval(newarg.tostring()))
 			else:
-				realnum=math.tan(const_pi/180*float(newarg.num))
+				realnum=math.tan(const_pi/180*eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1536,12 +1608,14 @@ class tangent:
 		print("   "*rec+"tangent: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= tangent([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class arcsine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1551,8 +1625,8 @@ class arcsine:
 		return "arcsine"
 	def tostring(self,substitute=False):
 		return "arcsin("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\arcsin\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\arcsin\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1565,11 +1639,11 @@ class arcsine:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if float(newarg.num)>1 or float(newarg.num)<-1:return self
+			if eval(newarg.tostring())>1 or eval(newarg.tostring())<-1:return self
 			if Use_Radians:
-				realnum=math.asin(float(newarg.num))
+				realnum=math.asin(eval(newarg.tostring()))
 			else:
-				realnum=180/const_pi*math.asin(float(newarg.num))
+				realnum=180/const_pi*math.asin(eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1610,12 +1684,14 @@ class arcsine:
 		print("   "*rec+"arcsine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval=arcsine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class arccosine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1625,8 +1701,8 @@ class arccosine:
 		return "arccosine"
 	def tostring(self,substitute=False):
 		return "arccos("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\arccos\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\arccos\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1639,11 +1715,11 @@ class arccosine:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if float(newarg.num)>1 or float(newarg.num)<-1:return self
+			if eval(newarg.tostring())>1 or eval(newarg.tostring())<-1:return self
 			if Use_Radians:
-				realnum=math.acos(float(newarg.num))
+				realnum=math.acos(eval(newarg.tostring()))
 			else:
-				realnum=180/const_pi*math.acos(float(newarg.num))
+				realnum=180/const_pi*math.acos(eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1684,12 +1760,14 @@ class arccosine:
 		print("   "*rec+"arccosine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= arccosine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class arctangent:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1699,8 +1777,8 @@ class arctangent:
 		return "arctangent"
 	def tostring(self,substitute=False):
 		return "arctan("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\arctan\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\arctan\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1714,9 +1792,9 @@ class arctangent:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.atan(float(newarg.num))
+				realnum=math.atan(eval(newarg.tostring()))
 			else:
-				realnum=180/const_pi*math.atan(float(newarg.num))
+				realnum=180/const_pi*math.atan(eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1757,12 +1835,14 @@ class arctangent:
 		print("   "*rec+"arctangent: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= arctangent([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class natlogarithm:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1772,8 +1852,8 @@ class natlogarithm:
 		return "natlogarithm"
 	def tostring(self,substitute=False):
 		return "ln("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\ln\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\ln\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1786,8 +1866,8 @@ class natlogarithm:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if float(newarg.num)<=0:return self
-			realnum=math.log(float(newarg.num))
+			if eval(newarg.tostring())<=0:return self
+			realnum=math.log(eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1828,12 +1908,14 @@ class natlogarithm:
 		print("   "*rec+"natlogarithm: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= natlogarithm([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class comlogarithm: #log_10
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1843,8 +1925,8 @@ class comlogarithm: #log_10
 		return "comlogarithm"
 	def tostring(self,substitute=False):
 		return "log("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\log\left("+self.arg.tolatex()+r"\right)"
+	def tolatex(self,roundit=False):
+		return r"\log\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1857,8 +1939,8 @@ class comlogarithm: #log_10
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if float(newarg.num)<=0:return self
-			realnum=math.log10(float(newarg.num))
+			if eval(newarg.tostring())<=0:return self
+			realnum=math.log10(eval(newarg.tostring()))
 			return number([str(realnum)])
 		else:
 			return self	
@@ -1899,12 +1981,14 @@ class comlogarithm: #log_10
 		print("   "*rec+"comlogarithm: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= comlogarithm([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
 class squareroot:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1914,8 +1998,8 @@ class squareroot:
 		return "squareroot"
 	def tostring(self,substitute=False):
 		return "sqrt("+self.arg.tostring()+")"
-	def tolatex(self):
-		return r"\sqrt{"+self.arg.tolatex()+r"}"
+	def tolatex(self,roundit=False):
+		return r"\sqrt{"+self.arg.tolatex(roundit)+r"}"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
@@ -1928,7 +2012,7 @@ class squareroot:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			newnum=float(newarg.num)
+			newnum=eval(newarg.tostring())
 			if newnum<0:return self
 
 			realnum=math.sqrt(newnum)
@@ -1973,9 +2057,11 @@ class squareroot:
 		self.arg.printtree(rec+1)
 	def findvariables(self):
 		
-		return [self.arg.findvariables()]
+		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
 		retval= squareroot([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]

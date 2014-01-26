@@ -1,6 +1,6 @@
 import textparser
 from debugger import *
-debug.lvl=1
+debug.lvl=0
 def unittest(filename,approx=False):
 	print("Starting  "+filename.replace(".test","")+"\n---")
 	f=open('Tests/'+filename)

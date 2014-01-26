@@ -11,11 +11,27 @@ from sys import exit
 import Entityclass as Entities
 from stringmanipulations import *
 from debugger import *
+
 def TextToCAS(instring,recursions=0):
 	origin=instring
 	instring=instring.replace("-","+-").replace("++","+").replace("--","+").replace("(+-","(-")
+	newinstring=""
+	for index,char in enumerate(instring):
+		if char=="_":
+			if index==0:
+				pass
+			elif instring[index-1] not in ["*","/","+","-"]:
+				if index>=2 and instring[index-2]=="-":
+					pass
+				elif index+1<len(instring) and instring[index+1]=="{":
+					pass
+				else:
+					newinstring+="*"
+		newinstring+=char
+	instring=newinstring[:]
+
 	#if instring[0]=="+":instring=instring[1:]
-	if instring[0]=="+":
+	if instring[0]=="+" or instring[0]=="*":
 		instring=instring[1:]
 	if instring[0]=="-":
 		return Entities.product([Entities.number(["-1"]),TextToCAS(instring[1:])])
@@ -118,12 +134,10 @@ def TextToCAS(instring,recursions=0):
 	else:
 		debug(3,recursions*"    "+origin+" er et \"noegent\" tal")
 		return Entities.number([instring])
-debug.lvl=0
+debug.lvl=3
 if __name__=="__main__":
-	print(Entities.subdict.adddefinition(Entities.number(["a"]),Entities.number(["2"])))
-	a=TextToCAS("(k+d)^3")
-	a=a.posforms(1)
-#	print(a.tostring())
+	#Entities.subdict.adddefinition(number(["a"]),TextToCAS("-_m"))
+	a=TextToCAS("sqrt(2)")
+	a=a.posforms(1,True)
+
 	print(a)
-	print("DONE WITH SIMPLIFY")
-	#print("INPUT:"+b+"\n"+"RESULT:",a)#+"\nApprox: " +a.approx().tostring())

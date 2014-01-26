@@ -48,4 +48,3 @@ def ydersteparentes(parentespar):
 	parentespar.sort()
 	if parentespar==[]:return None
 	return(parentespar[0])
-#print(stringtoparentespar("sin((a+b)^2)"))

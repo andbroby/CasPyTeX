@@ -1,1 +1,1 @@
-print("||asdfasdf||"[2:-2])
+print("forget a"[6:])
