@@ -48,3 +48,78 @@ def ydersteparentes(parentespar):
 	parentespar.sort()
 	if parentespar==[]:return None
 	return(parentespar[0])
+def sigfigroundfromstr(numberstr,sigfig):
+	zeroessofar=True
+	figurecounter=0
+	addzeroes=False
+	rounddown=False
+	aftercomma=False
+	newstrarray=[]
+	for index,figure in enumerate(numberstr):
+		if figure==".":
+			aftercomma=True
+		if addzeroes:
+			if aftercomma:
+				break
+			newstrarray.append(0)
+			continue
+		if zeroessofar and figure not in ["0","."]:
+			zeroessofar=False
+			figurecounter=1
+		if not zeroessofar:
+
+			if figurecounter!=sigfig+1 and figure!=".":
+				figurecounter+=1
+			elif figurecounter==sigfig+1:
+				if figure==".":
+					if int(numberstr[index+1])>=5:
+						newstrarray[index-1]+=1
+						addzeroes=True
+						if not aftercomma:
+							newstrarray.append(0)
+						continue
+					elif int(numberstr[index+1])<5:
+						rounddown=True
+						addzeroes=True
+						if not aftercomma:
+							newstrarray.append(0)
+						continue
+				if int(numberstr[index])>=5:
+					newstrarray[index-1]+=1
+					addzeroes=True
+					if not aftercomma:
+						newstrarray.append(0)
+					continue
+				elif int(numberstr[index])<5:
+					rounddown=True
+					addzeroes=True
+					if not aftercomma:
+						newstrarray.append(0)
+					continue
+		if figure!=".":
+			newstrarray.append(int(figure))
+		else:
+			newstrarray.append(".")
+	if rounddown==True:
+		return "".join([str(n) for n in newstrarray])
+	else:
+		newarr=newstrarray[:]
+		while True:
+			oldarr=newarr[:]
+			newarr=[]
+			for index,figure in enumerate(oldarr):
+				if figure==10:
+					if newarr[index-1]==".":
+						newarr[index-2]+=1
+						newarr.append(0)
+					else:
+						if index==0:
+							newarr.insert(1)
+							newarr.append(0)
+						else:
+							newarr[index-1]+=1
+							newarr.append(0)
+				else:
+					newarr.append(figure)
+			if 10 not in newarr:
+				return "".join([str(n) for n in newarr])

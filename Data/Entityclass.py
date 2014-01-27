@@ -85,9 +85,9 @@ class product:
 		for n in newfactors:
 			if n.type()=="addition":
 				returnstring+=r"\left("+n.tolatex(roundit)+r"\right)\cdot "
-			elif n.type()=="number" and n.isunit and len(returnstring)>=6 and returnstring[-6:]==r"\cdot ":
+			elif n.type() in ["number","potens","division"] and n.isunit and len(returnstring)>=6 and returnstring[-6:]==r"\cdot ":
 				returnstring=returnstring[:-6]+r"\;"+n.tolatex(roundit)+r"\cdot "
-			elif n.type()=="number" and n.isunit:
+			elif n.type() in ["number","potens","division"]  and n.isunit:
 				returnstring+=r"\;"+n.tolatex(roundit)+r"\cdot"
 			else:
 				returnstring+=n.tolatex(roundit)+r"\cdot "
@@ -123,15 +123,15 @@ class product:
 				nonevaluableparts.append(n)
 		evalfactor=1
 		for n in evalparts:
-			evalfactor*=eval(n.tostring())
+			evalfactor*=eval(n.tostring().replace("^","**"))
 		if evalfactor%1==0:
 			evalfactor=int(evalfactor)
 		if nonevaluableparts==[]:
-			return newnumber([str(evalfactor)])
+			return newevaluednum(evalfactor)
 		if evalfactor==1:
 			return maybeclass(nonevaluableparts,product)
 		else:
-			return maybeclass([newnumber([str(evalfactor)])]+nonevaluableparts,product)
+			return maybeclass([newevaluednum(evalfactor)]+nonevaluableparts,product)
 	
 	def evalpart(self,approx=False):
 		newarr=[]
@@ -386,10 +386,8 @@ class number:
 		elif self.num[0]=="_":
 			return r"\textrm{"+self.num[1:]+"}"
 		if roundit==True and self.evaluable():
-			rounded=round(float(self.num),dec_places)
-			if rounded%1==0:
-				rounded=int(rounded)
-			return str(rounded)
+			rounded=sigfigroundfromstr(self.num,config.Significant_Figures)
+			return rounded
 		return self.num
 	def simplify(self,focus=None,thrd=0):###
 		"""if self.evaluable():
@@ -409,9 +407,9 @@ class number:
 	def evalsimplify(self,approx=False):
 		if approx and self.num in ["_pi","_e"]:
 			if self.num=="_pi":
-				return number([str(math.pi)])
+				return newevaluednum(math.pi)
 			elif self.num=="_e":
-				return number([str(math.e)])
+				return newevaluednum(math.e)
 		if self.evaluable(approx):
 			if float(self.num)%1==0:
 
@@ -465,6 +463,9 @@ class potens:
 			exit()
 		self.root=arr[0]
 		self.exponent=arr[1]
+		self.isunit=False
+		if self.root.type()=="number" and self.root.isunit:
+			self.isunit=True
 	def type(self):
 		
 		return "potens"
@@ -506,12 +507,12 @@ class potens:
 		newroot=self.root.evalsimplify(approx)
 		newexponent=self.exponent.evalsimplify(approx)
 		if newroot.evaluable(approx) and newexponent.evaluable(approx):
-			evaluated=eval(newroot.tostring())**eval(newexponent.tostring())
+			evaluated=eval(newroot.tostring().replace("^","**"))**eval(newexponent.tostring().replace("^","**"))
 			if evaluated%1==0:
 				evaluated=int(evaluated)
 			if approx==False and evaluated%1!=0:
-				return division([newroot,newexponent])
-			return newnumber([str(evaluated)])
+				return potens([newroot,newexponent])
+			return newevaluednum(evaluated)
 		return potens([newroot,newexponent])
 	def simplifyallparts(self,focus):
 		newparts=[]
@@ -634,6 +635,15 @@ class division:
 		self.arr=arr
 		self.numerator=arr[0]
 		self.denominator=arr[1]
+		self.isunit=False
+		if self.numerator.type()=="number" and self.numerator.isunit:
+			if self.denominator.type()=="number" and self.denominator.isunit:
+				self.isunit=True
+			elif self.denominator.type()=="potens" and self.denominator.root.type()=="number" and self.denominator.root.isunit:
+				self.isunit=True
+		elif self.numerator.type()=="potens" and self.numerator.root.type()=="number" and self.numerator.root.isunit:
+			if 	self.denominator.type()=="potens" and self.denominator.root.type()=="number" and self.denominator.root.isunit:
+				self.isunit=True
 	def type(self):
 		
 		return "division"
@@ -646,8 +656,12 @@ class division:
 			naevner="("+naevner+")"
 		return taeller+"/"+naevner
 	def tolatex(self,roundit=False):
-		
-		return r"\frac{"+self.numerator.tolatex(roundit)+"}{"+self.denominator.tolatex(roundit)+"}"
+		if self.movefactordownifalone()!=False:
+			return self.movefactordownifalone().tolatex()
+		if self.isunit:
+			return self.numerator.tolatex(roundit)+"/"+self.denominator.tolatex(roundit)
+		else:
+			return r"\frac{"+self.numerator.tolatex(roundit)+"}{"+self.denominator.tolatex(roundit)+"}"
 	def simplify(self,focus=None,thrd=0):#
 		
 		return SimplifyAll(self,focus,thrd)
@@ -670,18 +684,18 @@ class division:
 		newdenom=self.denominator.evalsimplify(approx)
 		if approx:
 			if newnum.evaluable(approx) and newdenom.evaluable(approx):
-				evaluated=eval(newnum.tostring())/eval(newdenom.tostring())
+				evaluated=eval(newnum.tostring().replace("^","**"))/eval(newdenom.tostring().replace("^","**"))
 				if evaluated%1==0:
 					evaluated=int(evaluated)
-				return newnumber([str(evaluated)])
+				return newevaluednum(evaluated)
 			return self
 		elif approx==False:
 			if newnum.evaluable(approx) and newdenom.evaluable(approx):
-				approxeval=eval(newnum.tostring())/eval(newdenom.tostring())
+				approxeval=eval(newnum.tostring().replace("^","**"))/eval(newdenom.tostring().replace("^","**"))
 				if approxeval%1==0:
 					approxeval=int(approxeval)
-					return newnumber([str(approxeval)])
-				elif eval(newnum.tostring())%1==0 and eval(newdenom.tostring())%1==0:
+					return newevaluednum(approxeval)
+				elif eval(newnum.tostring().replace("^","**"))%1==0 and eval(newdenom.tostring().replace("^","**"))%1==0:
 					nummy=int(newnum.tostring())
 					denommy=int(newdenom.tostring())
 					lcf=gcd(nummy,denommy)
@@ -892,6 +906,22 @@ class division:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),2]
+	def movefactordownifalone(self,focus=None):#(2_m)/_s => 2*(_m/_s)
+		if self.numerator.type()=="product":
+			newnum=self.numerator.moveconstantsinfront()
+			if newnum==False:
+				newnum=self.numerator
+			if newnum.factors[0].type()=="number":
+				canmovedown=True
+				for elsefactor in newnum.factors[1:]:
+					if elsefactor.type() in ["number","potens","division"] and elsefactor.isunit:
+						continue
+					canmovedown=False
+					break
+				if canmovedown:
+					multiplier=newnum.factors[0]
+					return product([multiplier,division([maybeclass(newnum.factors[1:],product),self.denominator])])
+		return False
 class addition:
 	def __init__(self,arr):
 		self.arr=arr
@@ -1011,17 +1041,17 @@ class addition:
 		newnewaddends=[]
 		for n in newaddends:
 			if n.evaluable(approx):
-				evaluedsum+=eval(n.tostring())
+				evaluedsum+=eval(n.tostring().replace("^","**"))
 			else:
 				newnewaddends.append(n)
 		if evaluedsum%1==0:
 			evaluedsum=int(evaluedsum)
 		if newnewaddends==[]:
-			return newnumber([str(evaluedsum)])
+			return newevaluednum(evaluedsum)
 		if evaluedsum==0:
 			return maybeclass(newnewaddends,addition)
 		else:
-			summedup=[newnumber([str(evaluedsum)])]+newnewaddends
+			summedup=[newevaluednum(evaluedsum)]+newnewaddends
 			return maybeclass(summedup,addition)
 	def evalpart(self,approx=False):
 		newarr=[]
@@ -1382,7 +1412,6 @@ def maybeclass(arr,classfunc):
 		return arr[0]
 	elif len(arr)>1:
 		return classfunc(arr)
-
 def newnumber(arr):
 	num=arr[0]
 	if num=="-1":
@@ -1390,6 +1419,22 @@ def newnumber(arr):
 	if num[0]=="-":
 		return product([number(["-1"]),number([num[1:]])])
 	return number([num])
+def newevaluednum(inputfloat):
+	if inputfloat>10**9 or inputfloat<-10**9:
+		exponent=int(math.log10(inputfloat))
+		multiplier=str(inputfloat)[0]+"."+str(inputfloat).replace(".","")[1:]
+		return potens([newnumber([multiplier]),newnumber([str(exponent)])])
+	elif inputfloat<0.001 and inputfloat>-0.001:
+		if inputfloat==0:
+			return number(["0"])
+		if "e" not in str(inputfloat):
+			print(inputfloat)
+			raise ValueError("Bad translation of float")
+		else:
+			rets=str(inputfloat).split("e")
+			return potens([newnumber([rets[0]]),newnumber([rets[1]])])
+	else:
+		return newnumber([str(inputfloat)])
 class sine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1414,10 +1459,10 @@ class sine:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.sin(eval(newarg.tostring()))
+				realnum=math.sin(eval(newarg.tostring().replace("^","**")))
 			else:
-				realnum=math.sin(const_pi/180*eval(newarg.tostring()))
-			return number([str(realnum)])
+				realnum=math.sin(const_pi/180*eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1490,10 +1535,10 @@ class cosine:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.cos(eval(newarg.tostring()))
+				realnum=math.cos(eval(newarg.tostring().replace("^","**")))
 			else:
-				realnum=math.cos(const_pi/180*eval(newarg.tostring()))
-			return number([str(realnum)])
+				realnum=math.cos(const_pi/180*eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1565,10 +1610,10 @@ class tangent:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.tan(eval(newarg.tostring()))
+				realnum=math.tan(eval(newarg.tostring().replace("^","**")))
 			else:
-				realnum=math.tan(const_pi/180*eval(newarg.tostring()))
-			return number([str(realnum)])
+				realnum=math.tan(const_pi/180*eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1639,12 +1684,12 @@ class arcsine:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if eval(newarg.tostring())>1 or eval(newarg.tostring())<-1:return self
+			if eval(newarg.tostring().replace("^","**"))>1 or eval(newarg.tostring().replace("^","**"))<-1:return self
 			if Use_Radians:
-				realnum=math.asin(eval(newarg.tostring()))
+				realnum=math.asin(eval(newarg.tostring().replace("^","**")))
 			else:
-				realnum=180/const_pi*math.asin(eval(newarg.tostring()))
-			return number([str(realnum)])
+				realnum=180/const_pi*math.asin(eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1715,12 +1760,12 @@ class arccosine:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if eval(newarg.tostring())>1 or eval(newarg.tostring())<-1:return self
+			if eval(newarg.tostring().replace("^","**"))>1 or eval(newarg.tostring().replace("^","**"))<-1:return self
 			if Use_Radians:
-				realnum=math.acos(eval(newarg.tostring()))
+				realnum=math.acos(eval(newarg.tostring().replace("^","**")))
 			else:
-				realnum=180/const_pi*math.acos(eval(newarg.tostring()))
-			return number([str(realnum)])
+				realnum=180/const_pi*math.acos(eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1792,10 +1837,10 @@ class arctangent:
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
-				realnum=math.atan(eval(newarg.tostring()))
+				realnum=math.atan(eval(newarg.tostring().replace("^","**")))
 			else:
-				realnum=180/const_pi*math.atan(eval(newarg.tostring()))
-			return number([str(realnum)])
+				realnum=180/const_pi*math.atan(eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1866,9 +1911,9 @@ class natlogarithm:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if eval(newarg.tostring())<=0:return self
-			realnum=math.log(eval(newarg.tostring()))
-			return number([str(realnum)])
+			if eval(newarg.tostring().replace("^","**"))<=0:return self
+			realnum=math.log(eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -1939,9 +1984,9 @@ class comlogarithm: #log_10
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			if eval(newarg.tostring())<=0:return self
-			realnum=math.log10(eval(newarg.tostring()))
-			return number([str(realnum)])
+			if eval(newarg.tostring().replace("^","**"))<=0:return self
+			realnum=math.log10(eval(newarg.tostring().replace("^","**")))
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):
@@ -2012,11 +2057,11 @@ class squareroot:
 	def evalsimplify(self,approx=False):
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
-			newnum=eval(newarg.tostring())
+			newnum=eval(newarg.tostring().replace("^","**"))
 			if newnum<0:return self
 
 			realnum=math.sqrt(newnum)
-			return number([str(realnum)])
+			return newevaluednum(realnum)
 		else:
 			return self	
 	def simplifyallparts(self,focus):

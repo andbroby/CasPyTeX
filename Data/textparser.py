@@ -137,7 +137,7 @@ def TextToCAS(instring,recursions=0):
 debug.lvl=3
 if __name__=="__main__":
 	#Entities.subdict.adddefinition(number(["a"]),TextToCAS("-_m"))
-	a=TextToCAS("sqrt(2)")
+	a=TextToCAS("0.1^10")
 	a=a.posforms(1,True)
 
 	print(a)
