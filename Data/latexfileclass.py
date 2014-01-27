@@ -26,10 +26,14 @@ class LatexFile:
 			return True
 		self.lines.pop()
 	def writetofile(self):
-		f=open(self.path+"/"+self.filename,"w")
+		if platform=="win32":
+			f=open(self.path+"\\"+self.filename,"w")
+		else:
+			f=open(self.path+"/"+self.filename,"w")
 		[f.write(line) for line in self.preamble+[r'\begin{document}'+"\n"]+self.lines+[r"\end{document}"+"\n"]]
 	def compiletolatex(self):
 		self.writetofile()
+		print("LINES",self.preamble+[r'\begin{document}'+"\n"]+self.lines+[r"\end{document}"+"\n"])
 		if platform=="win32":
 			diditwork=call([r'pdflatex','-interaction=nonstopmode',self.filename],shell=True,cwd=self.path,stdout=open(os.devnull,'wb'))
 		else:

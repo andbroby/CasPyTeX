@@ -38,6 +38,7 @@ class logfile:
 	def __init__(self,filename):
 		self.lines=["Filename:  "+str(filename)+"\n"]
 		self.filename=filename+".CASlog"
+		print("THIS WORKS",self.filename)
 	def appendline(self,rawstr):
 		self.lines.append(rawstr+"\n")
 	def writetofile(self):
@@ -83,9 +84,15 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n" bag på
 	path=getcwd()
 	Truefilename=filename
-	if "/" in filename:
+	if sys.platform!="win32" and "/" in filename:
 		Truefilename=filename.split("/")[-1]
 		path="".join([n+"/" for n in filename.split("/")[:-1]][:])
+	elif sys.platform=="win32" and "\\" in filename:
+		Truefilename=filename.split("\\")[-1]
+		path="".join([n+"\\" for n in filename.split("\\")[:-1]][:])
+		if path[-1]=="\\":
+			path=path[:-1]
+	print("FILPATH",Truefilename,path)
 	texfile=LatexFile(Truefilename,path)
 	starttime=time.time()
 	maketitle=False
@@ -181,7 +188,7 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 			value=varandval[1]
 			if variable in ["Title","title"]:
 				if not maketitle:
-					texfile.addline(r"\maketitle")
+					texfile.addline(r"\maketitle\noindent")
 					maketitle=True
 				texfile.addtopreamble(r"\title{"+value+r"}")
 			elif variable in ["Author","author"]:
@@ -277,6 +284,8 @@ if __name__=="__main__":
 		print("This is not a .cpt file, exiting")
 		sys.exit()
 	logger=logfile(filename)
+	print(filename)
+	#sys.exit()
 	try:
 		cptfile=open(getcwd()+"/"+filename)
 		isfullpath=False
