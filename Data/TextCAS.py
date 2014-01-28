@@ -47,6 +47,7 @@ class logfile:
 	def logit(self,rawstr):
 		self.appendline(rawstr)
 		self.writetofile()
+
 def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to show it or not
 	if ":=" in matstr:
 		beforeafterdefinition=matstr.split(r":=")
@@ -58,7 +59,10 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 		try:
 			definenumber=textparser.TextToCAS(definenumstr)
 			definevalue=textparser.TextToCAS(definevalstr)
-			definitionsucces=Entities.subdict.adddefinition(definenumber,definevalue)
+			if definenumber.type()=="unknownfunction":
+				definitionsucces=Entities.subdict.addfunc(definenumber.funcstr,definenumber.inputexp,definevalue)
+			else:
+				definitionsucces=Entities.subdict.adddefinition(definenumber,definevalue)
 			if definitionsucces:
 				return [True,r"\["+definenumber.tolatex()+":="+definevalue.tolatex()+r"\]"]
 			else:

@@ -20,7 +20,7 @@ def TextToCAS(instring,recursions=0):
 		if char=="_":
 			if index==0:
 				pass
-			elif instring[index-1] not in ["*","/","+","-"]:
+			elif instring[index-1] not in ["*","/","+","-","("]:
 				if index>=2 and instring[index-2]=="-":
 					pass
 				elif index+1<len(instring) and instring[index+1]=="{":
@@ -116,7 +116,9 @@ def TextToCAS(instring,recursions=0):
 			elif funcstring=="sqrt":
 				debug(3,recursions*"    "+origin+" bliver til squareroot: "+insidebrackets )
 				return Entities.squareroot([TextToCAS(insidebrackets,recursions+1)])
-			raise ValueError("UNKNOWN FUNCTION"+funcstring)
+			else:
+				debug(3,recursions*"    "+origin+" bliver til unknownfunction: "+funcstring+"("+insidebrackets+")" )
+				return Entities.unknownfunction(funcstring,TextToCAS(insidebrackets,recursions+1))
 
 
 
@@ -136,8 +138,7 @@ def TextToCAS(instring,recursions=0):
 		return Entities.number([instring])
 debug.lvl=3
 if __name__=="__main__":
-	#Entities.subdict.adddefinition(number(["a"]),TextToCAS("-_m"))
-	a=TextToCAS("0.1^10")
-	a=a.posforms(1,True)
-
+	Entities.subdict.addfunc("f",Entities.number(["x"]),Entities.potens([Entities.number(["x"]),Entities.number(["2"])]))
+	a=TextToCAS("f(2)")
+	a=a.posforms(1,False)
 	print(a)

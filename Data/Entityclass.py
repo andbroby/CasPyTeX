@@ -12,13 +12,14 @@ const_e =math.e
 
 class definitiondict:
 	def __init__(self):
-		
+		self.funcdict=dict()	
 		self.subdict=dict()
 	def adddefinition(self,definenumber,defineval):
 		if type(definenumber)!=type(number(["2"])): #Checking for bad definitions
 			print("Bad definition (definenumber), quitting from definition")
 			return False
 		try:
+			
 			defineval.type()
 		except:
 			print("Bad definition, quitting from definition")
@@ -45,11 +46,48 @@ class definitiondict:
 			return self.subdict[numkey]
 		except:
 			return False
+	def addfunc(self,forskriftstr,inputnum,defineexp):
+		print("WHHHATTT",forskriftstr)
+		if type(inputnum)!=type(number(["2"])):
+			print("Bad func definition",inputnum.tostring())
+			return False
+		try:
+			defineexp.type()
+		except:
+			print("Bad func defineexp")
+			return False
+		self.funcdict[forskriftstr]=[inputnum,defineexp]
+		return True
+	def forgetfuncdef(self,forskriftstr):
+		try:
+			self.funcdict(forskriftstr,None)
+			return True
+		except:
+			return False
+	def wipefuncdict(self):
+		self.funcdict=dict()
+		return True
+	def findfuncsub(self,forskriftstr,inputexp):
+		print(forskriftstr,"EHH",)
+		try:
+			defineexpwithoutsub=self.funcdict[forskriftstr]
+		except:
+			return False
+		definexpsubbed=defineexpwithoutsub[1].substitute(defineexpwithoutsub[0],inputexp)
+		return definexpsubbed
 
+
+
+cancallisunit=["number","potens","division","product"]
 class product:
 	def __init__(self,arr): 
 		self.arr=arr
 		self.factors=arr
+		self.isunit=True
+		for factor in self.factors:
+			if not (factor.type() in cancallisunit and factor.isunit):
+				self.isunit=False
+				break
 	def type(self):
 		
 		return "product"
@@ -66,7 +104,7 @@ class product:
 		for n in newfactors:
 			if n.type()=="addition":
 				returnstring+="("+n.tostring()+")*"
-			elif n.type()=="number" and n.isunit and returnstring[-1]=="*":
+			elif n.type()=="number" and n.isunit and (len(returnstring)==0 or returnstring[-1]=="*"):
 				returnstring=returnstring[:-1]+n.tostring()+"*"
 			else:
 				returnstring+=n.tostring()+"*"
@@ -82,13 +120,13 @@ class product:
 			else:
 				newfactors.append(n)
 		returnstring="-"*(minuscounter%2)
-		for n in newfactors:
+		for index,n in enumerate(newfactors):
 			if n.type()=="addition":
 				returnstring+=r"\left("+n.tolatex(roundit)+r"\right)\cdot "
-			elif n.type() in ["number","potens","division"] and n.isunit and len(returnstring)>=6 and returnstring[-6:]==r"\cdot ":
+			elif n.type() in cancallisunit and n.isunit and len(returnstring)>=6 and returnstring[-6:]==r"\cdot " and not (index>0 and newfactors[index-1].type() in cancallisunit and newfactors[index-1].isunit):
 				returnstring=returnstring[:-6]+r"\;"+n.tolatex(roundit)+r"\cdot "
-			elif n.type() in ["number","potens","division"]  and n.isunit:
-				returnstring+=r"\;"+n.tolatex(roundit)+r"\cdot"
+			elif n.type() in cancallisunit  and n.isunit:
+				returnstring+=r"\;"*(index>0 and not(newfactors[index-1].type() in cancallisunit[index-1]))+n.tolatex(roundit)+r"\cdot "
 			else:
 				returnstring+=n.tolatex(roundit)+r"\cdot "
 		if returnstring[-6:]==r"\cdot ":returnstring=returnstring[:-6]
@@ -239,7 +277,7 @@ class product:
 		if retfalse:
 			return False
 		return maybeclass(newfactors,product)
-	def sameroot(self,focus):
+	def sameroot(self,focus,nonintrusive=False):
 		worked=False
 		breakall=False
 		for in1,fac1 in enumerate(self.factors):
@@ -248,7 +286,17 @@ class product:
 				if fac1.type()=="potens":
 					if fac2.type()=="potens":
 						if fac1.root==fac2.root:
-							if focus==None or fac1.root.contains(focus.tostring()) or  (fac1.exponent.contains(focus.tostring())==False and fac2.exponent.contains(focus.tostring())==False):
+							if nonintrusive:
+								if fac1.exponent.evaluable(True) and fac2.exponent.evaluable(True):
+									#copypaste
+									newexp=maybeclass([fac1.exponent,fac2.exponent],addition)
+									newroot=fac1.root
+									newfact=potens([newroot,newexp])
+									skipids=[id(fac1),id(fac2)]
+									worked=True
+									breakall=True
+									break								
+							elif focus==None or fac1.root.contains(focus.tostring()) or  (fac1.exponent.contains(focus.tostring())==False and fac2.exponent.contains(focus.tostring())==False):
 								newexp=maybeclass([fac1.exponent,fac2.exponent],addition)
 								newroot=fac1.root
 								newfact=potens([newroot,newexp])
@@ -258,6 +306,15 @@ class product:
 								break
 					elif fac2.type()!="potens":
 						if fac1.root==fac2:
+							if nonintrusive:
+								if fac1.exponent.evaluable(True):
+									newexp=maybeclass([fac1.exponent,number(["1"])],addition)
+									newroot=fac1.root
+									newfact=potens([newroot,newexp])
+									skipids=[id(fac1),id(fac2)]
+									worked=True
+									breakall=True
+									break									
 							if focus==None or fac2.contains(focus.tostring()) or fac1.exponent.contains(focus.tostring())==False:
 								newexp=maybeclass([fac1.exponent,number(["1"])],addition)
 								newroot=fac1.root
@@ -269,6 +326,15 @@ class product:
 				if fac1.type()!="potens":
 					if fac2.type()=="potens":
 						if fac2.root==fac1:
+							if nonintrusive:
+								if fac2.exponent.evaluable(True):
+									newexp=maybeclass([fac2.exponent,number(["1"])],addition)
+									newroot=fac2.root
+									newfact=potens([newroot,newexp])
+									skipids=[id(fac1),id(fac2)]
+									worked=True
+									breakall=True
+									break
 							if focus==None or fac1.contains(focus.tostring()) or fac2.exponent.contains(focus.tostring())==False:
 								newexp=maybeclass([fac2.exponent,number(["1"])],addition)
 								newroot=fac2.root
@@ -333,7 +399,6 @@ class product:
 					newdenom=product([factor1.denominator,factor2.denominator])
 					unified=division([newnumerator,newdenom])
 					newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
-		#			print(self.tostring(), "TO", product(newfactors).tostring())
 					return maybeclass(newfactors,product)
 				elif factor1.type()=="division":
 					rununialg=True
@@ -344,12 +409,25 @@ class product:
 					frac=factor2
 					side=factor1
 				if rununialg:
-					if side.evaluable():
-						newnumerator=product([side,frac.numerator])
-						newdenom=frac.denominator
-						unified=division([newnumerator,newdenom])
-						newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
-						return maybeclass(newfactors,product)
+					newnumerator=product([side,frac.numerator])
+					newdenom=frac.denominator
+					unified=treesimplify(division([newnumerator,newdenom]))
+					newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
+					retval=treesimplify(maybeclass(newfactors,product))
+					unified.printtree()
+					if side in cancallisunit and side.isunit and frac in cancallisunit and frac.isunit:
+						return retval
+					if unified.evaluable(True) or frac.numerator.type()=="product" and frac.numerator.factors[0].evaluable(True):
+						return retval
+					if unified.samerootofexponent()!=False or unified.antisameexponentfrac()!=False or unified.samerootofexponentfactors()!=False or unified.shortfract()!=False or unified.cancelfactors()!=False:
+
+						return maybeclass(newfactors,product)					#if side.evaluable():
+
+					#	newnumerator=product([side,frac.numerator])
+					#	newdenom=frac.denominator
+					#	unified=division([newnumerator,newdenom])
+					#	newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
+					#	return maybeclass(newfactors,product)
 		return False
 	def makepossiblesubstitutions(self):
 		newfactors=[]
@@ -359,16 +437,28 @@ class product:
 			return maybeclass(newfactors,product).makepossiblesubstitutions()
 		else:
 			return self
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")		
+		newfactors=[]
+		for n in self.factors:
+			newfactors.append(n.substitute(subthisexp,tothisexp))
+		if maybeclass(newfactors,product)!=self:
+			return maybeclass(newfactors,product).substitute(subthisexp,tothisexp)
+		else:
+			return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),len(self.factors)]
 class number:
-	def __init__(self,arr):
+	def __init__(self,arr,isfunction=False):
 		self.arr=arr
+		if len(arr)!=1:
+			raise ValueError("WRONG NUMBER")
 		self.num=arr[0]
+		self.isunit=False
+		self.isfunction=isfunction
 		if self.num[0]=="_":
 			self.isunit=True
-		else:
-			self.isunit=False
 	def type(self):
 		
 		return "number"
@@ -436,7 +526,7 @@ class number:
 		return self.num==other.num
 	def findvariables(self):
 		if not self.evaluable(True):
-			return self.num
+			return [self.num]
 		return []
 	def expand(self):
 		
@@ -454,11 +544,19 @@ class number:
 		return self
 	def getsimplifyscore(self):
 		return [1,1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		if subthisexp.num==self.num:
+			return tothisexp
+		return self
 class potens:
 	def __init__(self,arr):
 		self.arr=arr
 		self.rootandexponents=arr
 		if len(arr)!=2:
+			print_stack
+			print([n.tostring() for n in arr])
 			debug(1,"FORKERT POTENS, STOPPER PROGRAMMET")
 			exit()
 		self.root=arr[0]
@@ -630,20 +728,28 @@ class potens:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),2]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		newarr=[]
+		for n in [self.root,self.exponent]:
+			newarr.append(n.substitute(subthisexp,tothisexp))
+		if maybeclass(newarr,potens)!=self:
+			return maybeclass(newarr,potens).substitute(subthisexp,tothisexp)
+		return self
 class division:
 	def __init__(self,arr):
 		self.arr=arr
 		self.numerator=arr[0]
 		self.denominator=arr[1]
 		self.isunit=False
-		if self.numerator.type()=="number" and self.numerator.isunit:
-			if self.denominator.type()=="number" and self.denominator.isunit:
+		self.onelineprint=False
+		if self.numerator.type() in cancallisunit and self.numerator.isunit:
+			if self.denominator.type() in cancallisunit and self.denominator.isunit:
 				self.isunit=True
-			elif self.denominator.type()=="potens" and self.denominator.root.type()=="number" and self.denominator.root.isunit:
-				self.isunit=True
-		elif self.numerator.type()=="potens" and self.numerator.root.type()=="number" and self.numerator.root.isunit:
-			if 	self.denominator.type()=="potens" and self.denominator.root.type()=="number" and self.denominator.root.isunit:
-				self.isunit=True
+		if self.numerator.type() in ["number","potens"] and self.numerator.isunit:
+			if self.denominator.type() in ["number","potens"] and self.denominator.isunit:
+				self.onelineprint=True
 	def type(self):
 		
 		return "division"
@@ -656,9 +762,7 @@ class division:
 			naevner="("+naevner+")"
 		return taeller+"/"+naevner
 	def tolatex(self,roundit=False):
-		if self.movefactordownifalone()!=False:
-			return self.movefactordownifalone().tolatex()
-		if self.isunit:
+		if self.onelineprint:
 			return self.numerator.tolatex(roundit)+"/"+self.denominator.tolatex(roundit)
 		else:
 			return r"\frac{"+self.numerator.tolatex(roundit)+"}{"+self.denominator.tolatex(roundit)+"}"
@@ -760,9 +864,10 @@ class division:
 						break
 				if breakall:
 					break
-			newnum=maybeclass(appendtofactors+[n for n in self.numerator.factors if id(n) not in skiptheseids],product)
-			newdenom=maybeclass([n for n in self.denominator.factors if id(n) not in skiptheseids],product)
-			return maybeclass([newnum,newdenom],division)
+			if breakall:#simplifications happened
+				newnum=maybeclass(appendtofactors+[n for n in self.numerator.factors if id(n) not in skiptheseids],product)
+				newdenom=maybeclass([n for n in self.denominator.factors if id(n) not in skiptheseids],product)
+				return maybeclass([newnum,newdenom],division)
 		elif self.numerator.type()=="product":
 			skipthisindex=False
 			for index,numfact in enumerate(self.numerator.factors):
@@ -914,7 +1019,7 @@ class division:
 			if newnum.factors[0].type()=="number":
 				canmovedown=True
 				for elsefactor in newnum.factors[1:]:
-					if elsefactor.type() in ["number","potens","division"] and elsefactor.isunit:
+					if elsefactor.type() in cancallisunit and elsefactor.isunit:
 						continue
 					canmovedown=False
 					break
@@ -922,6 +1027,15 @@ class division:
 					multiplier=newnum.factors[0]
 					return product([multiplier,division([maybeclass(newnum.factors[1:],product),self.denominator])])
 		return False
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		newarr=[]
+		for n in [self.numerator,self.denominator]:
+			newarr.append(n.substitute(subthisexp,tothisexp))
+		if maybeclass(newarr,division)!=self:
+			return maybeclass(newarr,division).substitute(subthisexp,tothisexp)
+		return self
 class addition:
 	def __init__(self,arr):
 		self.arr=arr
@@ -1198,7 +1312,15 @@ class addition:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),len(self.addends)]
-
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		newarr=[]
+		for n in self.addends:
+			newarr.append(n.substitute(subthisexp,tothisexp))
+		if maybeclass(newarr,addition)!=self:
+			return maybeclass(newarr,addition).substitute(subthisexp,tothisexp)
+		return self
 """
 product
 division
@@ -1239,6 +1361,10 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			if moveinexp!=False:
 				newinstance=moveinexp
 				continue
+			samerootnonintrusiveexp=newinstance.sameroot(True)
+			if samerootnonintrusiveexp!=False:
+				newinstance=samerootnonintrusiveexp
+				continue
 		elif newinstance.type()=="potens":
 			newinstance=maybeclass([ExpandAll(n) for n in [newinstance.root,newinstance.exponent]],potens)
 			newinstance=treesimplify(newinstance)
@@ -1273,7 +1399,8 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			newinstance=comlogarithm([ExpandAll(newinstance.arg)])
 		elif newinstance.type()=="squareroot":
 			newinstance=squareroot([ExpandAll(newinstance.arg)])
-
+		elif newinstance.type()=="unknownfunction":
+			newinstance=unknownfunction(newinstance.funcstr,ExpandAll(newinstance.inputexp))
 		else:
 			raise ValueError("869 - Expected instance")
 		break
@@ -1304,7 +1431,6 @@ def treesimplify(instance): #simplifies trees (via the 2 associativeprop() funct
 #Simplificeringsmetoder
 SimplifyClassdict=dict() #kommer til at indeholde som index typen af klassen (produkt fx) og saa en array af simplificeringsmetoder som strings
 subdict=definitiondict()
-
 def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for tex 0 for instance
 	instancecopy=deepcopy(instance)
 	instancecopy=instancecopy.makepossiblesubstitutions()
@@ -1324,9 +1450,7 @@ def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for te
 		if None==focus1:
 			focus2=None
 		else:
-			print(focus1,instancecopy.findvariables()+[None])
 			focus2=number([focus1])
-		instancecopy.printtree()
 		testsimp=SimplifyAll(instancecopy,focus2)
 		willbeadded=True
 		for alreadyfound in retvar:
@@ -1335,12 +1459,10 @@ def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for te
 				break
 		if willbeadded and not testsimp.__eq__(instancecopy,False):
 			retvar.append(testsimp)
-	print("RETVAR",[n.tostring() for n in retvar])
 	if retvar==[]:
 		retvar.append(instancecopy)
 	if approx:
 		retvar=[n.approx() for n in retvar]
-	print("AFTER APPROX",retvar)
 	if stringortex==0:
 		return retvar
 	elif stringortex==1:
@@ -1428,7 +1550,6 @@ def newevaluednum(inputfloat):
 		if inputfloat==0:
 			return number(["0"])
 		if "e" not in str(inputfloat):
-			print(inputfloat)
 			raise ValueError("Bad translation of float")
 		else:
 			rets=str(inputfloat).split("e")
@@ -1491,7 +1612,6 @@ class sine:
 		info2=other.compareinfo()
 		if info1[0]!=info2[0]: #if not the same types
 			return False
-		print(info1[1][0].tostring(),info2[1][0].tostring(),"juscheckin",info1[1]==info2[1])
 		return info1[1]==info2[1]
 	def expand(self):
 		
@@ -1511,6 +1631,14 @@ class sine:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=sine([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
+
 class cosine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1586,6 +1714,15 @@ class cosine:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=cosine([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
+
+
 class tangent:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1661,6 +1798,14 @@ class tangent:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=tangent([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
+
 class arcsine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1737,6 +1882,13 @@ class arcsine:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=arcsine([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
 class arccosine:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1813,6 +1965,13 @@ class arccosine:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=arccosine([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
 class arctangent:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1888,6 +2047,15 @@ class arctangent:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=arctangent([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
+
+
 class natlogarithm:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -1961,6 +2129,13 @@ class natlogarithm:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=natlogarithm([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
 class comlogarithm: #log_10
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -2034,6 +2209,13 @@ class comlogarithm: #log_10
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=comlogarithm([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
 class squareroot:
 	def __init__(self,arr):
 		if len(arr)!=1:
@@ -2110,3 +2292,84 @@ class squareroot:
 		return self
 	def getsimplifyscore(self):
 		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=squareroot([self.arg.substitute(subthisexp,tothisexp)])
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
+class unknownfunction:
+	def __init__(self,funcstr,inputexp):
+		self.funcstr=funcstr
+		self.inputexp=inputexp
+	def type(self):
+		return "unknownfunction"
+	def tostring(self,substitute=False):
+		return self.funcstr+"("+self.inputexp.tostring()+")"
+	def tolatex(self,roundit=False):
+		return self.funcstr+r"\left("+self.inputexp.tolatex()+r"\right)"
+	def simplify(self,focus=None,thrd=0):###
+		return SimplifyAll(self,focus,thrd)
+	def maxleveloftree(self,level=0):
+		return self.arg.maxleveloftree(level+1)
+	def evaluable(self,approx=False):
+		return False
+	def evalsimplify(self,approx=False):
+		return self
+	def simplifyallparts(self,focus):
+		
+		return unknownfunction(self.funcstr,self.inputexp.simplify())
+	def contains(self,varstring):
+		if varstring==None:
+			return self.evaluable()
+		if self.inputexp.contains(varstring):
+			return True
+		return False
+	def compareinfo(self):
+		
+		return [self.type(),[self.funcstr,self.inputexp]]
+	def approx(self):
+	
+		return self.evalsimplify(True)
+	def __eq__(self,other,firstrecursion=False):
+		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
+		if type(other)==type(str()):return False
+		if firstrecursion:
+			newself=self.simplify(None)
+			newother=other.simplify(None)
+			return newself.__eq__(newother,False)
+		info1=self.compareinfo()
+		info2=other.compareinfo()
+		if info1[0]!=info2[0]:
+			return False
+		return info1[1]==info2[1]
+	def expand(self):
+		
+		return ExpandAll(self)
+	def posforms(self,stringortex,approx=False):
+		
+		return posformsimplify(self,stringortex,approx)
+	def printtree(self,rec=0):
+		print("   "*rec+"unknownfunction:"+self.tostring())
+		self.arg.printtree(rec+1)
+	def findvariables(self):
+		
+		return self.inputexp.findvariables()
+	def makepossiblesubstitutions(self):
+		retval=subdict.findfuncsub(self.funcstr,self.inputexp)
+		if retval!=False:
+			return retval.makepossiblesubstitutions()
+		retval= unknownfunction(self.funcstr,self.inputexp.makepossiblesubstitutions())
+		if retval!=self:
+			return retval.makepossiblesubstitutions()
+		return self
+	def getsimplifyscore(self):
+		return [self.maxleveloftree(),1]
+	def substitute(self,subthisexp,tothisexp):
+		if subthisexp.type()!="number":
+			raise ValueError("bad substitution number")
+		retval=unknownfunction(self.funcstr,self.inputexp.substitute(subthisexp,tothisexp))
+		if retval!=self:
+			return retval.substitute(subthisexp,tothisexp)
+		return self
