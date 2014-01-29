@@ -11,7 +11,7 @@ from sys import exit
 import Entityclass as Entities
 from stringmanipulations import *
 from debugger import *
-
+import equationsolver as equations
 def TextToCAS(instring,recursions=0):
 	origin=instring
 	instring=instring.replace("-","+-").replace("++","+").replace("--","+").replace("(+-","(-")
@@ -35,6 +35,8 @@ def TextToCAS(instring,recursions=0):
 		instring=instring[1:]
 	if instring[0]=="-":
 		return Entities.product([Entities.number(["-1"]),TextToCAS(instring[1:])])
+	if [0,len(instring)-1] in stringtoparentespar(instring):
+		instring=instring[1:-1]
 	if ydersteparentes(stringtoparentespar(instring))==[0,len(instring)-1]:instring=instring[1:-1]
 	#debug(3,"new string: "+str(instring))
 	#foerst addition
@@ -121,7 +123,6 @@ def TextToCAS(instring,recursions=0):
 				return Entities.unknownfunction(funcstring,TextToCAS(insidebrackets,recursions+1))
 
 
-
 	if "+" in instring or "*" in instring or "/" in instring or "(" in instring or ")" in instring:
 		#print("OIOI",instring,ydersteparentes(stringtoparentespar(instring))[0])
 		if instring[0]=="-" and ydersteparentes(stringtoparentespar(instring))[0]==1 and ydersteparentes(stringtoparentespar(instring))[1]==len(instring)-1:
@@ -129,16 +130,21 @@ def TextToCAS(instring,recursions=0):
 		debug(1,"FEJL: TextToCAS vil lave number instance med regnetegn i udtrykket\nStopper programmet")
 		exit()
 	#til sidst laves number instance
-	if origin[0]=="-":
-		debug(3,recursions*"    "+origin+" bliver til PRODUKT ['-1',"+origin[1:]+"]")
+	if instring[0]=="-":
+		debug(3,recursions*"    "+origin+" bliver til PRODUKT ['-1',"+instring[1:]+"]")
 		debug(3,(recursions+1)*"    "+"-1"+" er et \"noegent\" tal")
-		return Entities.product([Entities.number(["-1"]),TextToCAS(origin[1:],recursions+1)])
+		return Entities.product([Entities.number(["-1"]),TextToCAS(instring[1:],recursions+1)])
 	else:
 		debug(3,recursions*"    "+origin+" er et \"noegent\" tal")
 		return Entities.number([instring])
-debug.lvl=3
+debug.lvl=0
 if __name__=="__main__":
-	Entities.subdict.addfunc("f",Entities.number(["x"]),Entities.potens([Entities.number(["x"]),Entities.number(["2"])]))
-	a=TextToCAS("f(2)")
-	a=a.posforms(1,False)
-	print(a)
+	leftside=TextToCAS("200_g")
+	rightside=TextToCAS("x*32_birkes")
+
+	x=TextToCAS("x")
+	print("Eq1",leftside.tostring()+" = "+rightside.tostring())
+	eq1=equations.equation(leftside,rightside)
+	[n.printtree() for n in eq1.solve(x)]
+	print([n.approx().tostring() for n in eq1.solve(x)])
+	

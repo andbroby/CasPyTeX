@@ -10,11 +10,10 @@ It also features a .cpt interpreter. The syntax of a .cpt (CasPyTex) file is sho
 
 The project is developed just for the fun of it. The code is not  well-written.
 
-
 To-do
 -------------
 - More simplifying methods for functions (trig, logs and sqrt)
-- An equation solver
+- Simplifying fractions (a lot of simplifying fractions, and making sure things cancels out in fractions)
 - support for smart units (Make the CAS know that 1km=100m)
 
 Dependencies

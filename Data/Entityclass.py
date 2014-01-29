@@ -100,6 +100,8 @@ class product:
 				minuscounter+=1
 			else:
 				newfactors.append(n)
+		if newfactors==[]:
+			return "-"*(minuscounter%2)+"1"
 		returnstring="-"*(minuscounter%2)
 		for n in newfactors:
 			if n.type()=="addition":
@@ -152,9 +154,17 @@ class product:
 		return True
 	def evalsimplify(self,approx=False):
 		newfactors=[n.evalsimplify(approx) for n in self.factors]
+		#small associative property
+		newnewfactors=[]
+		for factor in newfactors:
+			if factor.type()=="product":
+				newnewfactors+=factor.factors
+			else:
+				newnewfactors.append(factor)
+
 		nonevaluableparts=[]
 		evalparts=[]
-		for n in newfactors:
+		for n in newnewfactors:
 			if n.evaluable(approx):
 				evalparts.append(n)
 			else:
@@ -172,30 +182,29 @@ class product:
 			return maybeclass([newevaluednum(evalfactor)]+nonevaluableparts,product)
 	
 	def evalpart(self,approx=False):
-		newarr=[]
-		proddy=1
-		for n in self.factors:
-			if n.evaluable(approx):
-				proddy*=float(n.tostring())
-			else:
-				newarr.append(n)
-		if proddy%1==0:proddy=int(proddy)
-		if proddy==1:
-			retval=newarr
-		else: 
-			retval=[newnumber([str(proddy)])]+newarr
-		#if len(retval)==len(self.factors):
-		#	return False
-		newretval=[]
-		for n in retval:
-			if n.type()=="product":
-				newretval+=n.factors
-			else:
-				newretval.append(n)
-		retval=maybeclass(newretval,product)
-		if retval.type=="product" and retval.moveconstantsinfront()!=False:
-			retval=retval.moveconstantsinfront()
-		return maybeclass(newretval,product)
+		return self.evalsimplify(approx)
+		#newarr=[]
+		#proddy=1
+		#for n in self.factors:
+		#	if n.evaluable(approx):
+		#		proddy*=float(n.tostring())
+		#	else:
+		#		newarr.append(n)
+		#if proddy%1==0:proddy=int(proddy)
+		#if proddy==1:
+		#	retval=newarr
+		#else: 
+		#	retval=[newnumber([str(proddy)])]+newarr
+		#newretval=[]
+		#for n in retval:
+		#	if n.type()=="product":
+		#		newretval+=n.factors
+		#	else:
+		#		newretval.append(n)
+		#retval=maybeclass(newretval,product)
+		#if retval.type=="product" and retval.moveconstantsinfront()!=False:
+		#	retval=retval.moveconstantsinfront()
+		#return maybeclass(newretval,product)
 	def moveconstantsinfront(self,focus=None):
 		toputback=[]
 		toputinfront=[]
@@ -2312,7 +2321,7 @@ class unknownfunction:
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
-		return self.arg.maxleveloftree(level+1)
+		return self.inputexp.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
 		return False
 	def evalsimplify(self,approx=False):
@@ -2352,7 +2361,7 @@ class unknownfunction:
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+"unknownfunction:"+self.tostring())
-		self.arg.printtree(rec+1)
+		self.inputexp.printtree(rec+1)
 	def findvariables(self):
 		
 		return self.inputexp.findvariables()

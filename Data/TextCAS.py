@@ -7,6 +7,8 @@ import textparser
 import Entityclass as Entities
 import time
 import CasPyTexConfig as config
+import equationsolver as equations
+import stringmanipulations
 def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the nicest both args in expressions, not list
 	#sort away the inputstr
 	newposformoutput=[n for n in posformoutput if n!=inputstr]
@@ -49,6 +51,75 @@ class logfile:
 		self.writetofile()
 
 def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to show it or not
+	if matstr[:6] in ["solve(","Solve("]:
+		#find endsolve bracket )
+		bracketoffset=0
+		checknow=False
+		bracketend=False
+		for index,char in enumerate(matstr):
+			if char=="(":
+				bracketoffset+=1
+				checknow=True
+			elif char==")":
+				bracketoffset-=1
+			if checknow and bracketoffset==0:
+				bracketend=index
+				break
+		if bracketend==False:
+			return [False,"bad solve syntax"]
+		insidesolvefunction=matstr[6:bracketend]
+		dropit=False
+		equationandsolvenum=False
+		for index in range(len(insidesolvefunction)-1,-1,-1):
+			if dropit:
+				if insidesolvefunction[index]=="{":
+					dropit=False
+				continue
+			if insidesolvefunction[index]=="}":
+				dropit=True
+				continue
+			if insidesolvefunction[index]==",":
+				equationandsolvenum=stringmanipulations.splitstringbyindexes(insidesolvefunction,[index])
+		if equationandsolvenum==False:
+			return [False, "bad solve syntax"]
+		#remove unnecessary spaces
+		newequationsandsolvenum=[]
+		for n in equationandsolvenum:
+			newn=""
+			dropit=False
+			for char in n:
+				if dropit:
+					if char=="}":
+						dropit=False
+				if not dropit and char=="{":
+					dropit=True
+				if not dropit and char==" ":
+					continue
+				newn+=char
+			newequationsandsolvenum.append(newn)
+		equationstring=newequationsandsolvenum[0]
+		solvenumstring=newequationsandsolvenum[1]
+		print([equationstring,solvenumstring])
+		leftandrightside=equationstring.split("=")
+		if len(leftandrightside)!=2:
+			return [False,"Too many \"=\" in solve function!"]
+		leftside=textparser.TextToCAS(leftandrightside[0])
+		rightside=textparser.TextToCAS(leftandrightside[1])
+		solvenum=textparser.TextToCAS(solvenumstring)
+		equationclass=equations.equation(leftside,rightside)
+		solutions=equationclass.solve(solvenum)
+		returnstring=equationclass.tolatex()
+		if solutions==None:
+			return [True,returnstring+r"{\quad\color{red}\textrm{Could not find any solutions!} "]
+		if solutions!=None:
+			returnstring+=r"\iff "
+		solutions=[n.approx() for n in solutions]
+		for solution in solutions:
+			returnstring+=solvenum.tolatex()+"="+solution.tolatex()+r"\quad "+config.Or_Symbol+r"\quad "
+		returnstring=returnstring[:-len(config.Or_Symbol+r"\quad ")]
+		return 	[True, r"\["+returnstring+"\]"]
+
+
 	if ":=" in matstr:
 		beforeafterdefinition=matstr.split(r":=")
 		if len(beforeafterdefinition)!=2:

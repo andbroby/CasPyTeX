@@ -1,1 +1,2 @@
-print("example(2*(3212+1)+1)"[8:-1])
+a="solve( 2*x+2=3*x  , x)"
+print(a[6:-1])
