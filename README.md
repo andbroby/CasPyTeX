@@ -27,4 +27,4 @@ Installation
 --------------
 1. Download and unzip the .zip of the repository
 2. Run WebGUI.py for the webinterface to run as a server on LOCALHOST
-3. Run Data/TextCAS.py with a .cpt file as an example 
+3. Run Data/TextCAS.py with a .cpt file as an argument
