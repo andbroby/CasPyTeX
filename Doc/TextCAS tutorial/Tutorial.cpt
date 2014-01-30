@@ -139,3 +139,23 @@ If you want to delete them all, just write:
 |p_{3}|
 |p_{4}|
 Now they're all gone. But remember that the CAS only forgets the definitions from **now on**.
+
+Function definitions work the same way:
+|s(t):=0.33_m/_s^2*t^2-2_m/_s*t|
+And you can call them:
+|s(15_s)|
+Syntax:
+#?startlatex
+\begin{verbatim}
+ |s(t):=0.33_m/_s^2*t^2-2_m/_s*t|
+ |s(15_s)|
+\end{verbatim}
+#?endlatex
+Solving in CasPyTeX is a lot like every other CAS:
+|solve(3*k=200_m,k)|
+Syntax:
+#?startlatex
+\begin{verbatim}
+  |solve(3*k=200_m,k)|
+\end{verbatim}
+#?endlatex

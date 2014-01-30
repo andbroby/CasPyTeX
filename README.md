@@ -12,7 +12,7 @@ The project is developed just for the fun of it. The code is not  well-written.
 
 To-do
 -------------
-- Update the tutorial.cpt.pdf
+- Update the Webinterface, and remove any interfaces that are not used
 - Add documentation
 - More simplifying methods for functions (trig, logs and sqrt)
 - Simplifying fractions (a lot of simplifying fractions, and making sure things cancels out in fractions)
