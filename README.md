@@ -16,7 +16,7 @@ To-do
 - Add documentation
 - More simplifying methods for functions (trig, logs and sqrt)
 - Simplifying fractions (a lot of simplifying fractions, and making sure things cancels out in fractions)
-- support for smart units (Make the CAS know that 1km=100m)
+- support for smart units (Make the CAS know that 1km=1000m)
 
 Dependencies
 -------------
