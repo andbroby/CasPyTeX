@@ -139,11 +139,13 @@ def TextToCAS(instring,recursions=0):
 		return Entities.number([instring])
 debug.lvl=0
 if __name__=="__main__":
-	leftside=TextToCAS("x^2/x")
+	leftside=TextToCAS("")
 	rightside=TextToCAS("x*32_birkes")
+	focus=TextToCAS("x")
 	leftside.printtree()
 	print("ASDAS")
-	print(leftside.simplify().approx().tostring())
+	print(leftside.simplify(focus).approx().tostring())
+	print(leftside.simplify(focus).approx().printtree())
 	#x=TextToCAS("x")
 	#print("Eq1",leftside.tostring()+" = "+rightside.tostring())
 	#eq1=equations.equation(leftside,rightside)

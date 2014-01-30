@@ -905,17 +905,14 @@ class division:
 			skipthisindex=False
 			for index,denomfact in enumerate(self.denominator.factors):
 				createfract=division([self.numerator,denomfact]).samerootofexponent(focus)
+
 				if createfract!=False:
 					appendtonum=createfract
 					skipthisindex=index
 					break
 			if skipthisindex!=False:
-				newdenoms=[]
-				for n in range(len(self.denominator.factors)):
-					if n!=skipthisindex:
-						newdenoms.append(self.denominator.factors[n])
-				newnum=maybeclass([appendtonum,self.numerator],product)
-				newdenom=maybeclass(newdenoms,product)
+				newdenom=self.denominator.delfactor(skipthisindex)
+				newnum=appendtonum
 				return maybeclass([newnum,newdenom],division)
 		return False
 	def samerootofexponent(self,focus=None): #a^b/a^c=a^(b-c)
@@ -934,12 +931,12 @@ class division:
 			if self.numerator.root==self.denominator:
 				if (focus!=None and self.numerator.root.contains(focus.tostring())) or (self.numerator.exponent.evaluable(True)):
 					newroot=self.denominator
-					return potens([newroot,addition([self.numerator.exponent,number(["1"])])])
+					return potens([newroot,addition([self.numerator.exponent,product([number(["-1"]),number(["1"])])])])
 		elif self.denominator.type()=="potens":
 			if self.denominator.root==self.numerator:
-				if (focus!=None and self.numerator.contains(focus.tostring())) or (self.denominator.root.evaluable(True)):
+				if (focus!=None and self.numerator.contains(focus.tostring())) or (self.denominator.exponent.evaluable(True)):
 					newroot=self.numerator
-					return potens([newroot,addition([self.denominator.exponent,number(["1"])])])
+					return potens([newroot,addition([number(["1"]),product([number(["-1"]),self.denominator.exponent])])])
 		return False
 	def antisameexponentfrac(self,focus=None): #b^a/c^a=(b/c)^a
 		if self.numerator.type()=="potens" and self.denominator.type()=="potens":
@@ -1072,6 +1069,23 @@ class division:
 		if maybeclass(newarr,division)!=self:
 			return maybeclass(newarr,division).substitute(subthisexp,tothisexp)
 		return self
+	def divisionasdenom(self,focus=None): #hvis der er division ganget på i nævneren, hæves det op
+		if self.denominator.type()=="product":
+			newnumeratorfacts=[self.numerator]
+			newdenomfacts=[]
+			nonewdenom=True
+			for denomfact in self.denominator.factors:
+				if denomfact.type()=="division":
+					newnumeratorfacts.append(division([denomfact.denominator,denomfact.numerator]))
+				else:
+					newdenomfacts.append(denomfact)
+					nonewdenom=False
+			if nonewdenom:
+				return maybeclass(newnumeratorfacts,product)
+			return division([maybeclass(newnumeratorfacts,product),maybeclass(newdenomfacts,product)])
+		elif self.denominator.type()=="division":
+			return product([self.numerator,division([self.denominator.denominator,self.denominator.numerator])])
+		return False
 class addition:
 	def __init__(self,arr):
 		self.arr=arr

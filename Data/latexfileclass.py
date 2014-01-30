@@ -12,7 +12,7 @@ class LatexFile:
 			#self.latexfile = open(filename, "r+")
 		#else:
 			#self.latexfile = open(filename, "w")
-		self.preamble=[r'\documentclass[11pt]{article}'+"\n",r"\usepackage{ae,aecompl}"+"\n",r"\usepackage[T1]{fontenc}"+"\n",r"\usepackage[utf8]{inputenc}"+"\n",r"\usepackage{color}"+"\n"]
+		self.preamble=[r'\documentclass[11pt]{article}'+"\n",r"\setlength{\topmargin}{-.5in}"+"\n",r"\setlength{\textheight}{9in}"+"\n",r"\setlength{\oddsidemargin}{.125in}"+"\n",r"\setlength{\textwidth}{6.25in}"+"\n",r"\usepackage{ae,aecompl}"+"\n",r"\usepackage[T1]{fontenc}"+"\n",r"\usepackage[utf8]{inputenc}"+"\n",r"\usepackage{color}"+"\n"]
 		self.lines=[]
 	def closefile(self):
 

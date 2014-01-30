@@ -9,6 +9,10 @@ import time
 import CasPyTexConfig as config
 import equationsolver as equations
 import stringmanipulations
+def maybecolored(str,colorname,checkval):
+	if checkval:
+		return "{"+r"\color{"+colorname+"}"+str+"}"
+	return str
 def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the nicest both args in expressions, not list
 	#sort away the inputstr
 	newposformoutput=[n for n in posformoutput if n!=inputstr]
@@ -111,7 +115,11 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			returnstring+=r"\iff "
 		if approx:solutions=[n.approx() for n in solutions]
 		for solution in solutions:
-			returnstring+=solvenum.tolatex(True)+"="+solution.tolatex(True)+r"\quad "+config.Or_Symbol+r"\quad "
+			if config.Use_Coloredoutput:
+				returnstring+=r"{\color{"+config.Color_of_output+"} "+solvenum.tolatex(True)+"="+solution.tolatex(True)+"} "+r"\quad "+config.Or_Symbol+r"\quad "
+			else:
+				returnstring+=solvenum.tolatex(True)+"="+solution.tolatex(True)+r"\quad "+config.Or_Symbol+r"\quad "
+
 		returnstring=returnstring[:-len(config.Or_Symbol+r"\quad ")]
 		return 	[True, r"\["+returnstring+"\]"]
 
@@ -131,7 +139,11 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			else:
 				definitionsucces=Entities.subdict.adddefinition(definenumber,definevalue)
 			if definitionsucces:
-				return [True,r"\["+definenumber.tolatex()+":="+definevalue.tolatex()+r"\]"]
+				simplified=picknicestsimplification(definevalue,definevalue.posforms(0,approx))
+				if simplified!=definevalue:
+					return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)+r"\;=\;"+maybecolored(simplified.tolatex(True),config.Color_of_output,config.Use_Coloredoutput)+r"\]"]
+
+				return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)+r"\]"]
 			else:
 				raise ValueError() #just to get to the except
 		except:

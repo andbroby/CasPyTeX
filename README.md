@@ -12,6 +12,8 @@ The project is developed just for the fun of it. The code is not  well-written.
 
 To-do
 -------------
+- Update the tutorial.cpt.pdf
+- Add documentation
 - More simplifying methods for functions (trig, logs and sqrt)
 - Simplifying fractions (a lot of simplifying fractions, and making sure things cancels out in fractions)
 - support for smart units (Make the CAS know that 1km=100m)

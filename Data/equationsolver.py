@@ -57,6 +57,7 @@ class equation:
 			newconstantside=ent.number(["0"])	
 			return self.movesolvenumstoleftside(newsolveside,newconstantside,solvenum,False)
 	def tolatex(self):
+		
 		return self.leftexp.tolatex()+"="+self.rightexp.tolatex()
 	def solve(self,solvenum): #solvenum er instance
 		#simplify both sides
@@ -67,17 +68,14 @@ class equation:
 		solveside=movedarr1[0]
 		constantside=movedarr1[1]
 		solvetry1=self.recursesolve(solveside,constantside,solvenum)
-		solvetry2=self.recursesolve(movedarr2[0],movedarr2[1],solvenum)
-		if solvetry1==None and solvetry2==None:
-			return None
-		elif solvetry1!=None:
+		if solvetry1!=None:
 			return solvetry1
-		else:
-			return solvetry2
+		solvetry2=self.recursesolve(movedarr2[0],movedarr2[1],solvenum)
+		return solvetry2
 	def recursesolve(self,solvesideinput,constantsideinput,solvenum): #GOT TO RETURN ARRAYS OR BOOLS
 		solvestring=solvenum.num
 		solveside=solvesideinput.simplify(solvenum)
-		constantside=constantsideinput.simplify(solvenum)
+		constantside=constantsideinput
 		if solvesideinput==solvenum:
 			return [constantsideinput]
 		if not solveside.contains(solvestring):
@@ -91,17 +89,16 @@ class equation:
 		elif solveside.type()=="potens":
 			returnfromindividualsolve=self.solvepotens(solveside,constantside,solvenum)
 		else:
-			print("NO SOLVE FUNCTIONS WORK")
 			return None
 		solutions=[]
 		if returnfromindividualsolve==None:
 			return None
 		for nextstep in returnfromindividualsolve:
 			if self.recursesolve(nextstep[0],nextstep[1],solvenum)!=None:
-				for solution in self.recursesolve(nextstep[0],nextstep[1],solvenum,):
+				for solution in self.recursesolve(nextstep[0],nextstep[1],solvenum):
 					if solution not in solutions:
 						solutions.append(solution)
-		return [n.simplify(solvenum) for n in solutions]
+		return [n.simplify() for n in solutions]
 		
 	def solveaddition(self,solveside,constantside,solvenum):
 		newaddends=[]
