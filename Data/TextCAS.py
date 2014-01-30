@@ -15,8 +15,6 @@ def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the
 	#sort by treedepth
 	if newposformoutput==[]:
 		return inputstr
-	print(newposformoutput)
-	print("inputstr",inputstr.tostring(),"OUTPUT",[[n.tostring(),n.getsimplifyscore()] for n in newposformoutput])
 	nicest=newposformoutput[0]
 	nicestgetreturn=newposformoutput[0].getsimplifyscore()
 	for n in newposformoutput:
@@ -40,7 +38,6 @@ class logfile:
 	def __init__(self,filename):
 		self.lines=["Filename:  "+str(filename)+"\n"]
 		self.filename=filename+".CASlog"
-		print("THIS WORKS",self.filename)
 	def appendline(self,rawstr):
 		self.lines.append(rawstr+"\n")
 	def writetofile(self):
@@ -99,7 +96,6 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			newequationsandsolvenum.append(newn)
 		equationstring=newequationsandsolvenum[0]
 		solvenumstring=newequationsandsolvenum[1]
-		print([equationstring,solvenumstring])
 		leftandrightside=equationstring.split("=")
 		if len(leftandrightside)!=2:
 			return [False,"Too many \"=\" in solve function!"]
@@ -113,9 +109,9 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			return [True,returnstring+r"{\quad\color{red}\textrm{Could not find any solutions!} "]
 		if solutions!=None:
 			returnstring+=r"\iff "
-		solutions=[n.approx() for n in solutions]
+		if approx:solutions=[n.approx() for n in solutions]
 		for solution in solutions:
-			returnstring+=solvenum.tolatex()+"="+solution.tolatex()+r"\quad "+config.Or_Symbol+r"\quad "
+			returnstring+=solvenum.tolatex(True)+"="+solution.tolatex(True)+r"\quad "+config.Or_Symbol+r"\quad "
 		returnstring=returnstring[:-len(config.Or_Symbol+r"\quad ")]
 		return 	[True, r"\["+returnstring+"\]"]
 
@@ -142,7 +138,6 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			logger.logit("Definition Error adding key "+matstr+  " to dict (bad key?)")
 			return [False,"Definition Error adding key "+matstr+  " to dict (bad key?)"]
 	else:#can only simplify
-		print("interpreting matstr",matstr)
 		origexp=textparser.TextToCAS(matstr)
 		nicest=picknicestsimplification(origexp.makepossiblesubstitutions(),origexp.posforms(0,approx))
 		returnline=r"\["+origexp.tolatex()+"="+config.Use_Coloredoutput*r"\color{"+config.Use_Coloredoutput*config.Color_of_output+config.Use_Coloredoutput*"}"+nicest.tolatex(True)+r"\]"
@@ -348,6 +343,8 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 	else:
 		print("compilation Error")
 		logger.logit("Compilation error")
+	print("Total running time: "+str(time.time()-starttime)+" seconds")
+	logger.logit("Total running time: "+str(time.time()-starttime)+" seconds")
 #filename="test.cpt"
 #f=open("TextCAS/"+filename)
 #cpttolatex([n.replace("\n","") for n in f.readlines()],"test.cpt")
@@ -359,7 +356,6 @@ if __name__=="__main__":
 		print("This is not a .cpt file, exiting")
 		sys.exit()
 	logger=logfile(filename)
-	print(filename)
 	#sys.exit()
 	try:
 		cptfile=open(getcwd()+"/"+filename)

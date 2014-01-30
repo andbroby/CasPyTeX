@@ -47,7 +47,6 @@ class definitiondict:
 		except:
 			return False
 	def addfunc(self,forskriftstr,inputnum,defineexp):
-		print("WHHHATTT",forskriftstr)
 		if type(inputnum)!=type(number(["2"])):
 			print("Bad func definition",inputnum.tostring())
 			return False
@@ -68,7 +67,6 @@ class definitiondict:
 		self.funcdict=dict()
 		return True
 	def findfuncsub(self,forskriftstr,inputexp):
-		print(forskriftstr,"EHH",)
 		try:
 			defineexpwithoutsub=self.funcdict[forskriftstr]
 		except:
@@ -423,13 +421,11 @@ class product:
 					unified=treesimplify(division([newnumerator,newdenom]))
 					newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
 					retval=treesimplify(maybeclass(newfactors,product))
-					unified.printtree()
 					if side in cancallisunit and side.isunit and frac in cancallisunit and frac.isunit:
 						return retval
 					if unified.evaluable(True) or frac.numerator.type()=="product" and frac.numerator.factors[0].evaluable(True):
 						return retval
 					if unified.samerootofexponent()!=False or unified.antisameexponentfrac()!=False or unified.samerootofexponentfactors()!=False or unified.shortfract()!=False or unified.cancelfactors()!=False:
-
 						return maybeclass(newfactors,product)					#if side.evaluable():
 
 					#	newnumerator=product([side,frac.numerator])
@@ -801,6 +797,20 @@ class division:
 				if evaluated%1==0:
 					evaluated=int(evaluated)
 				return newevaluednum(evaluated)
+			elif newnum.evaluable(approx):
+				if newdenom.type()=="product" and newdenom.factors[0].evaluable(True):
+					returnnum=division([newnum,newdenom.factors[0]]).evalsimplify(approx)
+					returndenom=newdenom.delfactor(0)
+					return division([returnnum,returndenom])
+			elif newdenom.evaluable(approx):
+				if newnum.type()=="product" and newnum.factors[0].evaluable(True):
+					joined=division([newnum.factors[0],newdenom]).evalsimplify(True)
+					returnrest=newnum.delfactor(0)
+					return product([joined,returnrest])
+			elif newnum.type()=="product" and newnum.factors[0].evaluable(True) and newdenom.type()=="product" and newdenom.factors[0].evaluable(True):
+				joined=division([newnum.factors[0],newdenom.factors[0]]).evalsimplify(True)
+				retval=division([product([joined,newnum.delfactor(0)]),newdenom.delfactor(0)])
+				return retval
 			return self
 		elif approx==False:
 			if newnum.evaluable(approx) and newdenom.evaluable(approx):
@@ -920,6 +930,16 @@ class division:
 					newexponent=addition([maybeclass(sum1,potens),product([number(["-1"]),maybeclass(sum2,potens)])])
 					debug(3,"samerootofexponent output: "+potens([newroot,newexponent]).tostring())
 					return potens([newroot,newexponent])
+		elif self.numerator.type()=="potens":
+			if self.numerator.root==self.denominator:
+				if (focus!=None and self.numerator.root.contains(focus.tostring())) or (self.numerator.exponent.evaluable(True)):
+					newroot=self.denominator
+					return potens([newroot,addition([self.numerator.exponent,number(["1"])])])
+		elif self.denominator.type()=="potens":
+			if self.denominator.root==self.numerator:
+				if (focus!=None and self.numerator.contains(focus.tostring())) or (self.denominator.root.evaluable(True)):
+					newroot=self.numerator
+					return potens([newroot,addition([self.denominator.exponent,number(["1"])])])
 		return False
 	def antisameexponentfrac(self,focus=None): #b^a/c^a=(b/c)^a
 		if self.numerator.type()=="potens" and self.denominator.type()=="potens":
@@ -1025,14 +1045,21 @@ class division:
 			newnum=self.numerator.moveconstantsinfront()
 			if newnum==False:
 				newnum=self.numerator
+
 			if newnum.factors[0].type()=="number":
 				canmovedown=True
 				for elsefactor in newnum.factors[1:]:
 					if elsefactor.type() in cancallisunit and elsefactor.isunit:
+
 						continue
 					canmovedown=False
 					break
 				if canmovedown:
+					newdenom=self.denominator.evalsimplify(True)
+					if newdenom.type()=="product" and newdenom.factors[0].evaluable(True):
+						return False
+					elif newdenom.evaluable(True):
+						return False
 					multiplier=newnum.factors[0]
 					return product([multiplier,division([maybeclass(newnum.factors[1:],product),self.denominator])])
 		return False
@@ -1520,7 +1547,6 @@ def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify p
 			try:
 				methodfile=open(sys.argv[0].replace("TextCAS.py","")+"Simplify Methods/"+newsimplify.type()+".simplifymethods")
 			except:
-				print("SUPER SHARP SHOOTER",sys.argv[0].replace("TextCAS.py","")+"Simplify Methods/"+newsimplify.type()+".simplifymethods")
 				raise ValueError("Could not find the .simplifymethod files")
 
 		rawmethods=methodfile.readlines()

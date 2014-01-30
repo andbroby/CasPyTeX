@@ -66,7 +66,6 @@ class equation:
 		movedarr2=[n.simplify(solvenum) for n in self.movesolvenumstoleftside(self.rightexp.simplify(solvenum),self.leftexp.simplify(solvenum),solvenum)]
 		solveside=movedarr1[0]
 		constantside=movedarr1[1]
-		print("MOVED TO RIGHT SIDES\n"+solveside.tostring()+" = "+constantside.tostring()+"\n"+movedarr2[0].tostring()+" = "+movedarr2[1].tostring())
 		solvetry1=self.recursesolve(solveside,constantside,solvenum)
 		solvetry2=self.recursesolve(movedarr2[0],movedarr2[1],solvenum)
 		if solvetry1==None and solvetry2==None:
@@ -79,11 +78,9 @@ class equation:
 		solvestring=solvenum.num
 		solveside=solvesideinput.simplify(solvenum)
 		constantside=constantsideinput.simplify(solvenum)
-		print("INPUT",solvesideinput.tostring()+" = "+constantsideinput.tostring())
 		if solvesideinput==solvenum:
 			return [constantsideinput]
 		if not solveside.contains(solvestring):
-			print("WAHHHHHHHHHHHHHHHHHAT")
 			return None
 		if solveside.type()=="addition":
 			returnfromindividualsolve=self.solveaddition(solveside,constantside,solvenum)
@@ -99,7 +96,6 @@ class equation:
 		solutions=[]
 		if returnfromindividualsolve==None:
 			return None
-		print("RETURNED",[[k[0].tostring()+" = "+k[1].tostring()] for k in returnfromindividualsolve],"from","INPUT",solvesideinput.tostring()+" = "+constantsideinput.tostring())
 		for nextstep in returnfromindividualsolve:
 			if self.recursesolve(nextstep[0],nextstep[1],solvenum)!=None:
 				for solution in self.recursesolve(nextstep[0],nextstep[1],solvenum,):
@@ -117,7 +113,6 @@ class equation:
 				newconstandsideaddends.append(ent.product([ent.number(["-1"]),addend]))
 		returnsolveside=ent.maybeclass(newaddends,ent.addition)
 		returnconstantside=ent.maybeclass(newconstandsideaddends,ent.addition)
-		print("WANTS TO RETURN",[[returnsolveside.tostring(),returnconstantside.tostring()]])
 		if len(newaddends)!=1:
 			degrees=False
 			ispol=True
