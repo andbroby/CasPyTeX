@@ -152,7 +152,7 @@ Syntax:
 \end{verbatim}
 #?endlatex
 Solving in CasPyTeX is a lot like every other CAS:
-|solve(3*k=200_m,k)|
+|solve(3*k=30_m,k)|
 Syntax:
 #?startlatex
 \begin{verbatim}

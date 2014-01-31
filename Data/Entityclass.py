@@ -43,19 +43,19 @@ class definitiondict:
 			print("bad definenumber")
 			return False
 		try:
-			return self.subdict[numkey]
+			return deepcopy(self.subdict[numkey])
 		except:
 			return False
-	def addfunc(self,forskriftstr,inputnum,defineexp):
-		if type(inputnum)!=type(number(["2"])):
-			print("Bad func definition",inputnum.tostring())
+	def addfunc(self,forskriftstr,args,defineexp):
+		if type(args[0])!=type(number(["2"])):
+			print("Bad func definition",args.tostring())
 			return False
 		try:
 			defineexp.type()
 		except:
 			print("Bad func defineexp")
 			return False
-		self.funcdict[forskriftstr]=[inputnum,defineexp]
+		self.funcdict[forskriftstr]=[args,defineexp]
 		return True
 	def forgetfuncdef(self,forskriftstr):
 		try:
@@ -66,13 +66,18 @@ class definitiondict:
 	def wipefuncdict(self):
 		self.funcdict=dict()
 		return True
-	def findfuncsub(self,forskriftstr,inputexp):
+	def findfuncsub(self,forskriftstr,args):
 		try:
 			defineexpwithoutsub=self.funcdict[forskriftstr]
 		except:
 			return False
-		definexpsubbed=defineexpwithoutsub[1].substitute(defineexpwithoutsub[0],inputexp)
-		return definexpsubbed
+		defineexpsubbed=deepcopy(defineexpwithoutsub)
+		newdefined=deepcopy(defineexpsubbed)[1]
+		if len(args)!=len(defineexpsubbed[0]):
+			return False
+		for index in range(len(defineexpsubbed[0])):
+			newdefined=newdefined.substitute(defineexpsubbed[0][index],args[index])
+		return newdefined
 
 
 
@@ -476,13 +481,13 @@ class number:
 		if self.num=="_pi":
 			return "pi"
 		elif self.num=="_e":
-			return "e"
+			return "_e"
 		return self.num
 	def tolatex(self,roundit=False):
 		if self.num=="_pi":
 			return r"\pi"
 		elif self.num=="_e":
-			return "e"
+			return r"\mathrm{e}"
 		elif self.num[0]=="_":
 			return r"\textrm{"+self.num[1:]+"}"
 		if roundit==True and self.evaluable():
@@ -793,6 +798,141 @@ class division:
 				self.denominator=newnumber([str(int(float(self.denominator.tostring())/lcf))])
 				return False
 		return True
+	def numshortenfract(self,focus=None):
+		num=self.numerator
+		denom=self.denominator
+		if num.evaluable(True) and denom.evaluable(True):
+			numnum=eval(num.tostring().replace("^","**"))
+			denomnum=eval(denom.tostring().replace("^","**"))
+			realfract=numnum/denomnum
+			if realfract%1==0:
+				return newnumber([str(realfract)])
+			if numnum%1==0 and denomnum%1==0:
+				lcf=gcd(numnum,denomnum)
+				if lcf==1:
+					return False
+				newnumnum=numnum//lcf
+				newdenomnum=denomnum//lcf
+
+				if newdenomnum==1:
+					return number([str(newnumnum)])
+				return division([number([str(newnumnum)]),number([str(newdenomnum)])])
+		return False
+	def shortenevaluables(self,focus=None):
+		newnum=self.numerator.evalsimplify()
+		newdenom=self.denominator.evalsimplify()
+		if newnum.type()=="product" and newdenom.type()=="product":
+			evaluablenumfacts=[]
+			nonevaluablenumfacts=[]
+			foundevaluables=False
+			foundnonevaluables1=False
+			for fact in newnum.factors:
+				if fact.evaluable(True):
+					evaluablenumfacts.append(fact)
+					foundevaluables=True
+				else:
+					nonevaluablenumfacts.append(fact)
+					foundnonevaluables=True
+			if foundevaluables==False:
+				return False
+			evaluabledenomfacts=[]
+			nonevaluabledenomfacts=[]
+			foundevaluables=False
+			foundnonevaluables2=False
+			for fact in newdenom.factors:
+				if fact.evaluable(True):
+					evaluabledenomfacts.append(fact)
+					foundevaluables=True
+				else:
+					nonevaluabledenomfacts.append(fact)
+					foundnonevaluables2=True
+			if foundnonevaluables2==False:
+				return False
+
+			#simplifyevaluables
+			evaluablefract=division([product(evaluablenumfacts),product(evaluabledenomfacts)]).numshortenfract()
+			if evaluablefract==False:
+				return False
+			if evaluablefract.type()=="division":
+				if foundnonevaluables1!=False:
+					retnum=product([evaluablefract.numerator,product(nonevaluablenumfacts)])
+				else:
+					retnum=pevaluablefract.numerator
+				if foundnonevaluables2!=False:
+					retdenom=product([evaluablefract.denominator,product(nonevaluabledenomfacts)])
+				else:
+					retdenom=evaluablefract.denominator
+				return division([retnum,retdenom])
+			else:
+				if foundnonevaluables1!=False:
+					retnum=product([evaluablefract,product(nonevaluablenumfacts)])
+				else:
+					retnum=evaluablefract
+				retdenom=nonevaluabledenomfacts
+				return division(retnum,retdenom)
+		elif newnum.type()=="product" and newdenom.evaluable(True):
+			evaluablenumfacts=[]
+			
+			nonevaluablenumfacts=[]
+			foundevaluables=False
+			foundnonevaluables=False
+			for fact in newnum.factors:
+				if fact.evaluable(True):
+					evaluablenumfacts.append(fact)
+					foundevaluables=True
+				else:
+					nonevaluablenumfacts.append(fact)
+					foundnonevaluables=True
+			if foundevaluables==False:
+				return False
+			evaluablefract=division([product(evaluablenumfacts),newdenom]).numshortenfract()
+			
+			if evaluablefract==False:
+				return False
+			if evaluablefract.type()=="division":
+				if foundnonevaluables:
+					retnum=product([evaluablefract.numerator,product(nonevaluablenumfacts)])
+				else:
+					retnum=evaluablefract.numerator
+				retdenom=evaluablefract.denominator
+				return division([retnum,retdenom])
+			else:
+				if foundnonevaluables:
+					return product([evaluablefract,product(nonevaluablenumfacts)])
+				else:
+					return evaluablefract
+		elif newdenom.type()=="product" and newnum.evaluable(True):
+			evaluabledenomfacts=[]
+			nonevaluabledenomfacts=[]
+			foundevaluables=False
+			foundnonevaluables=False
+			for fact in newdenom.factors:
+				if fact.evaluable(True):
+					evaluabledenomfacts.append(fact)
+					foundevaluables=True
+				else:
+					nonevaluabledenomfacts.append(fact)
+					foundnonevaluables=True
+			if foundevaluables==False:
+				return False
+			evaluablefract=division([newnum,product(evaluabledenomfacts)]).numshortenfract()
+			if evaluablefract==False:
+				return False			
+			if evaluablefract.type()=="division":
+				retnum=evaluablefract.numerator
+				if foundnonevaluables:
+					retdenom=product([evaluablefract.denominator,product(nonevaluabledenomfacts)])
+				else:
+					retdenom=evaluablefract.denominator	
+				return division([retnum,retdenom])
+			else:
+				retnum=evaluablefract
+				if foundnonevaluables:
+					retdenom=product([evaluablefract.denominator,product(nonevaluabledenomfacts)])
+				else:
+					retdenom=evaluablefract.denominator	
+				return division([retnum,retdenom])
+		return False
 	def evalsimplify(self,approx=False):
 		newnum=self.numerator.evalsimplify(approx)
 		newdenom=self.denominator.evalsimplify(approx)
@@ -1057,7 +1197,6 @@ class division:
 					canmovedown=False
 					break
 				if canmovedown:
-					print(self.tostring())
 					newdenom=self.denominator.evalsimplify(True)
 					if newdenom.type()=="product" and newdenom.factors[0].evaluable(True):
 						return False
@@ -1096,6 +1235,12 @@ class division:
 		elif self.denominator.type()=="division":
 			return product([self.numerator,division([self.denominator.denominator,self.denominator.numerator])])
 		return False
+	def divisionasnum(self,focus=None):
+		if self.numerator.type()=="division":
+			retnum=self.numerator.numerator
+			retdenom=product([self.denominator,self.numerator.denominator])
+			return division([retnum,retdenom])
+		return False	
 class addition:
 	def __init__(self,arr):
 		self.arr=arr
@@ -1460,7 +1605,7 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 		elif newinstance.type()=="squareroot":
 			newinstance=squareroot([ExpandAll(newinstance.arg)])
 		elif newinstance.type()=="unknownfunction":
-			newinstance=unknownfunction(newinstance.funcstr,ExpandAll(newinstance.inputexp))
+			newinstance=unknownfunction(newinstance.funcstr,[ExpandAll(n) for n in newinstance.args])
 		else:
 			raise ValueError("869 - Expected instance")
 		break
@@ -2359,35 +2504,36 @@ class squareroot:
 			return retval.substitute(subthisexp,tothisexp)
 		return self
 class unknownfunction:
-	def __init__(self,funcstr,inputexp):
+	def __init__(self,funcstr,inputargs):
 		self.funcstr=funcstr
-		self.inputexp=inputexp
+		self.args=inputargs
 	def type(self):
 		return "unknownfunction"
 	def tostring(self,substitute=False):
-		return self.funcstr+"("+self.inputexp.tostring()+")"
+		return self.funcstr+"("+"".join([n.tostring()+"," for n in self.args])[:-1]+")"
 	def tolatex(self,roundit=False):
-		return self.funcstr+r"\left("+self.inputexp.tolatex()+r"\right)"
+		return self.funcstr+r"\left("+"".join([n.tolatex()+"," for n in self.args])[:-1]+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
-		return self.inputexp.maxleveloftree(level+1)
+		return max([n.maxleveloftree(level+1) for n in self.args])
 	def evaluable(self,approx=False):
 		return False
 	def evalsimplify(self,approx=False):
 		return self
 	def simplifyallparts(self,focus):
 		
-		return unknownfunction(self.funcstr,self.inputexp.simplify())
+		return unknownfunction(self.funcstr,[n.simplify(focus) for n in self.args])
 	def contains(self,varstring):
 		if varstring==None:
 			return self.evaluable()
-		if self.inputexp.contains(varstring):
-			return True
+		for n in self.args:
+			if n.contains(varstring):
+				return True
 		return False
 	def compareinfo(self):
 		
-		return [self.type(),[self.funcstr,self.inputexp]]
+		return [self.type(),[self.funcstr,self.args]]
 	def approx(self):
 	
 		return self.evalsimplify(True)
@@ -2411,15 +2557,19 @@ class unknownfunction:
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+"unknownfunction:"+self.tostring())
-		self.inputexp.printtree(rec+1)
+		[n.printtree(rec+1) for n in self.args]
 	def findvariables(self):
-		
-		return self.inputexp.findvariables()
+		variables=[]
+		for n in self.args:
+			for k in n.findvariables():
+				if k not in variables:
+					variables.append(k)
+		return variables
 	def makepossiblesubstitutions(self):
-		retval=subdict.findfuncsub(self.funcstr,self.inputexp)
+		retval=subdict.findfuncsub(self.funcstr,self.args)
 		if retval!=False:
 			return retval.makepossiblesubstitutions()
-		retval= unknownfunction(self.funcstr,self.inputexp.makepossiblesubstitutions())
+		retval= unknownfunction(self.funcstr,[n.makepossiblesubstitutions() for n in self.args])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
@@ -2428,7 +2578,7 @@ class unknownfunction:
 	def substitute(self,subthisexp,tothisexp):
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
-		retval=unknownfunction(self.funcstr,self.inputexp.substitute(subthisexp,tothisexp))
+		retval=unknownfunction(self.funcstr,[n.substitute(subthisexp,tothisexp) for n in self.args])
 		if retval!=self:
 			return retval.substitute(subthisexp,tothisexp)
 		return self

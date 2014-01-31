@@ -136,7 +136,7 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			definenumber=textparser.TextToCAS(definenumstr)
 			definevalue=textparser.TextToCAS(definevalstr)
 			if definenumber.type()=="unknownfunction":
-				definitionsucces=Entities.subdict.addfunc(definenumber.funcstr,definenumber.inputexp,definevalue)
+				definitionsucces=Entities.subdict.addfunc(definenumber.funcstr,definenumber.args,definevalue)
 			else:
 				definitionsucces=Entities.subdict.adddefinition(definenumber,definevalue)
 			if definitionsucces:
@@ -263,7 +263,6 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 						while forgetvar[-1]==" ":
 							forgetvar=forgetvar[:-1]
 						try:
-							print("\n\n\nOI",forgetvar,"\n\n\n")
 							Entities.subdict.forgetdefinition(Entities.number([forgetvar]))
 						except:
 							pass
