@@ -11,10 +11,29 @@ const_pi=math.pi
 const_e =math.e
 
 class definitiondict:
+	"""
+	This class handles every variable/function definition made by the TextCAS
+	It has 2 libraries of definitions, one for variables and one for functions
+	It has functions that will:
+		add a definition
+		forget a definition
+		forget a whole library (either the variable dict, or the function dict)
+		lookup if a variable or function has a definition, and return the correct substitution, eg 
+		if f(x)=2*x then if you look up f(2) it will return 2*2
+	"""
 	def __init__(self):
+		"""
+		Creates the two dictionaries
+		funcdict is the dictionary for functions
+		subdict is the dictionary for variables
+		"""
 		self.funcdict=dict()	
 		self.subdict=dict()
 	def adddefinition(self,definenumber,defineval):
+		"""
+		Adds a variable (definenumber) to the subdict
+		ie a (definenumber):=2/x(defineval)   
+		"""
 		if type(definenumber)!=type(number(["2"])): #Checking for bad definitions
 			print("Bad definition (definenumber), quitting from definition")
 			return False
@@ -27,9 +46,15 @@ class definitiondict:
 		self.subdict[definenumber.num]=defineval
 		return True
 	def wipedict(self):
+		"""
+		Deletes the whole variable dictionary subdict
+		"""
 		self.subdict=dict()
 		return True
 	def forgetdefinition(self,definenumber):
+		"""
+		Forgets a variable definition
+		"""
 		try:
 			numstr=definenumber.num
 			self.subdict.pop(numstr, None)
@@ -37,6 +62,11 @@ class definitiondict:
 		except:
 			return False
 	def findsubstitute(self,definenumber):
+		"""
+		The input is a number (a  in this file)
+		The function looks up if the number is defined in the dictionary subdict
+		It returns False if the input is not defined, and the definition if it's defined
+		"""
 		try:
 			numkey=definenumber.num
 		except:
@@ -47,6 +77,13 @@ class definitiondict:
 		except:
 			return False
 	def addfunc(self,forskriftstr,args,defineexp):
+		"""
+		Adds a function to the funcdict
+		ex: f(x,y):=3*x+y
+		forskriftstr="f"
+		args=[x,y] #expression, NOT a string
+		defineexp=3*x+y #expression, NOT a string
+		"""
 		if type(args[0])!=type(number(["2"])):
 			print("Bad func definition",args.tostring())
 			return False
@@ -58,15 +95,32 @@ class definitiondict:
 		self.funcdict[forskriftstr]=[args,defineexp]
 		return True
 	def forgetfuncdef(self,forskriftstr):
+		"""
+		Deletes a function from the function dictionary
+		"""
 		try:
 			self.funcdict(forskriftstr,None)
 			return True
 		except:
 			return False
 	def wipefuncdict(self):
+		"""
+		Forgets all functions
+		"""
 		self.funcdict=dict()
 		return True
 	def findfuncsub(self,forskriftstr,args):
+		"""
+		inputs= a string and some args
+		This function will look up, if the function exists in the dictionary
+		Return False if the function doesn't exist.
+		if it exists, it will subsitute the args for the input args, and return that:
+		Ex: if f(x,y)=3*x+y and f(2,3) is called
+		
+		The function will look up f, and see that f exists in the funcdict
+		then, it will subsitute x=2 and y=3 in the expression 3*x+y
+		Which is 3*2+3, which is what it will return
+		"""
 		try:
 			defineexpwithoutsub=self.funcdict[forskriftstr]
 		except:
@@ -83,6 +137,24 @@ class definitiondict:
 
 cancallisunit=["number","potens","division","product"]
 class product:
+	"""
+	Represents a product, and is an expressionclass (i'll define that in a txt file sometime)
+	Has the following functions that needs to be in an expressionclass:
+		type
+		tostring
+		tolatex
+		simplify
+		maxleveloftree
+		evaluable
+		evalsimplify
+		simplifyallparts
+		contains
+		approx
+		__eq__
+		compareinfo
+		findvariables
+		ntimes0
+	"""
 	def __init__(self,arr): 
 		self.arr=arr
 		self.factors=arr
@@ -261,6 +333,7 @@ class product:
 				return False
 		return True
 	def compareinfo(self):
+		
 		return [self.type(),self.factors]
 	def findvariables(self):
 		variables=[]
@@ -394,8 +467,10 @@ class product:
 
 		return False
 	def expand(self):
+		
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
+		
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
 		print("   "*rec+"PRODUCT: "+self.tostring())
@@ -463,6 +538,7 @@ class product:
 		else:
 			return self
 	def getsimplifyscore(self):
+		
 		return [self.maxleveloftree(),len(self.factors)]
 class number:
 	def __init__(self,arr,isfunction=False):
@@ -1526,13 +1602,7 @@ class addition:
 		if maybeclass(newarr,addition)!=self:
 			return maybeclass(newarr,addition).substitute(subthisexp,tothisexp)
 		return self
-"""
-product
-division
-addition
-number
-potens
-"""
+
 def ExpandAll(instance): #Expands and simplifies (a little)
 	newinstance=treesimplify(deepcopy(instance))
 	while True:

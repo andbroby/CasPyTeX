@@ -1,10 +1,3 @@
-"""
-TextToCAS tager matematik og konverterer det til CAS'en
-
-
-(a+b)-2*a^3
-
-"""
 from sys import exit
 
 
@@ -13,6 +6,10 @@ from stringmanipulations import *
 from debugger import *
 import equationsolver as equations
 def TextToCAS(instring,recursions=0):
+	"""
+	TextToCAS will turn a string (eg "2*x+3") and turn it into a 
+	tree of the classes you'll see in Entityclass
+	"""
 	origin=instring
 	instring=instring.replace("-","+-").replace("++","+").replace("--","+").replace("(+-","(-")
 	newinstring=""
@@ -151,6 +148,8 @@ def TextToCAS(instring,recursions=0):
 		return Entities.number([instring])
 debug.lvl=3
 if __name__=="__main__":
-	Entities.subdict.addfunc(definenumber.funcstr,definenumber.inputexp,definevalue)
-	exp=TextToCAS("fææ(x,y,3*x,ln(5))")
+	"""
+	This is just used when debugging
+	"""
+	pass
 	
