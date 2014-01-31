@@ -421,6 +421,11 @@ class product:
 					unified=treesimplify(division([newnumerator,newdenom]))
 					newfactors=[n for n in self.factors if id(n) not in [id(factor1),id(factor2)]]+[unified]
 					retval=treesimplify(maybeclass(newfactors,product))
+					for sidevar in side.findvariables():
+						if number([sidevar]).isunit:
+							for fracvar in frac.findvariables():
+								if number([fracvar]).isunit and number([sidevar])==number([fracvar]):
+									return retval
 					if side in cancallisunit and side.isunit and frac in cancallisunit and frac.isunit:
 						return retval
 					if unified.evaluable(True) or frac.numerator.type()=="product" and frac.numerator.factors[0].evaluable(True):
