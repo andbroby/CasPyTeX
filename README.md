@@ -1,6 +1,10 @@
 CasPyTeX
 ------------------------------
-**CasPyTeX still in development.**
+![alt tag](http://i.imgur.com/14PCKRd.png)
+
+*CasPyTex is able to solve equations with units. The blue color is optional, and can be changed in the config.*
+
+**CasPyTex is still in development, so there's almost definitely bugs**
 
 This is a simple CAS with different interfaces capable of outputting in LaTeX.
 

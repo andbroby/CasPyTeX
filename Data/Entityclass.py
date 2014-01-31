@@ -1123,7 +1123,7 @@ class division:
 					shortdenom=newdenom.factors[0]
 					if shortnum.evaluable() and shortdenom.evaluable():
 						evaluablefract=division([shortnum,shortdenom]).evalsimplify()
-						if evaluablefract.type()=="number":
+						if evaluablefract.type()!="division":
 							evaluablefract=division([evaluablefract,number(["1"])])
 						if evaluablefract.numerator!=number(["1"]):
 							newnumerator.factors[0]=evaluablefract.numerator

@@ -33,7 +33,7 @@ def TextToCAS(instring,recursions=0):
 	#if instring[0]=="+":instring=instring[1:]
 	if instring[0]=="+" or instring[0]=="*":
 		instring=instring[1:]
-	if instring[0]=="-":
+	if instring[0]=="-" and findcharoutsideparentes("+",instring)==[]:
 		return Entities.product([Entities.number(["-1"]),TextToCAS(instring[1:])])
 	if [0,len(instring)-1] in stringtoparentespar(instring):
 		instring=instring[1:-1]
