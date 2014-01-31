@@ -12,12 +12,14 @@ The project is developed just for the fun of it. The code is not  well-written.
 
 To-do
 -------------
+- More characters should be allowed in definitions (f'(x) for example)
 - Update the Webinterface, and remove any interfaces that are not used
 - Add documentation
 - More simplifying methods for functions (trig, logs and sqrt)
 - Simplifying fractions (when the numerator of a fraction is a fraction it self)
 - Support for smart units (Make the CAS know that 1km=1000m)
-- Fix bug in line 424 (units not getting put up in the numerator of the fraction)
+- Solving methods for more of the expression classes
+
 
 Dependencies
 -------------
