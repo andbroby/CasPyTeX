@@ -69,9 +69,11 @@ class equation:
 		constantside=movedarr1[1]
 		solvetry1=self.recursesolve(solveside,constantside,solvenum)
 		if solvetry1!=None:
-			return solvetry1
+			return [n.simplify() for n in solvetry1]
 		solvetry2=self.recursesolve(movedarr2[0],movedarr2[1],solvenum)
-		return solvetry2
+		if solvetry2!=None:
+			return [n.simplify() for n in solvetry2]
+		return None
 	def recursesolve(self,solvesideinput,constantsideinput,solvenum): #GOT TO RETURN ARRAYS OR BOOLS
 		solvestring=solvenum.num
 		solveside=solvesideinput.simplify(solvenum)

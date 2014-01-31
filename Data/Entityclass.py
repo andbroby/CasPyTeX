@@ -1052,6 +1052,7 @@ class division:
 					canmovedown=False
 					break
 				if canmovedown:
+					print(self.tostring())
 					newdenom=self.denominator.evalsimplify(True)
 					if newdenom.type()=="product" and newdenom.factors[0].evaluable(True):
 						return False
@@ -1074,12 +1075,16 @@ class division:
 			newnumeratorfacts=[self.numerator]
 			newdenomfacts=[]
 			nonewdenom=True
+			returnFalse=True
 			for denomfact in self.denominator.factors:
 				if denomfact.type()=="division":
 					newnumeratorfacts.append(division([denomfact.denominator,denomfact.numerator]))
+					returnFalse=False
 				else:
 					newdenomfacts.append(denomfact)
 					nonewdenom=False
+			if returnFalse:
+				return False
 			if nonewdenom:
 				return maybeclass(newnumeratorfacts,product)
 			return division([maybeclass(newnumeratorfacts,product),maybeclass(newdenomfacts,product)])

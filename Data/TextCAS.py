@@ -9,6 +9,7 @@ import time
 import CasPyTexConfig as config
 import equationsolver as equations
 import stringmanipulations
+from debugger import *
 def maybecolored(str,colorname,checkval):
 	if checkval:
 		return "{"+r"\color{"+colorname+"}"+str+"}"
@@ -113,7 +114,7 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 			return [True,returnstring+r"{\quad\color{red}\textrm{Could not find any solutions!} "]
 		if solutions!=None:
 			returnstring+=r"\iff "
-		if approx:solutions=[n.approx() for n in solutions]
+		if approx:solutions=[n.approx().simplify() for n in solutions]
 		for solution in solutions:
 			if config.Use_Coloredoutput:
 				returnstring+=r"{\color{"+config.Color_of_output+"} "+solvenum.tolatex(True)+"="+solution.tolatex(True)+"} "+r"\quad "+config.Or_Symbol+r"\quad "
@@ -152,6 +153,8 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 	else:#can only simplify
 		origexp=textparser.TextToCAS(matstr)
 		nicest=picknicestsimplification(origexp.makepossiblesubstitutions(),origexp.posforms(0,approx))
+		if approx:
+			nicest=nicest.approx().simplify()
 		returnline=r"\["+origexp.tolatex()+"="+config.Use_Coloredoutput*r"\color{"+config.Use_Coloredoutput*config.Color_of_output+config.Use_Coloredoutput*"}"+nicest.tolatex(True)+r"\]"
 		return [True,returnline]
 		#returnline=r"\["+origexp.tolatex()
@@ -361,6 +364,7 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 #f=open("TextCAS/"+filename)
 #cpttolatex([n.replace("\n","") for n in f.readlines()],"test.cpt")
 if __name__=="__main__":
+	debug.lvl=0
 	if len(argv)!=2:
 		print("Bad arg, exiting")
 	filename=argv[1]

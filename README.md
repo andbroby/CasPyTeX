@@ -15,9 +15,9 @@ To-do
 - Update the Webinterface, and remove any interfaces that are not used
 - Add documentation
 - More simplifying methods for functions (trig, logs and sqrt)
-- Simplifying fractions (a lot of simplifying fractions, and making sure things cancels out in fractions)
-- support for smart units (Make the CAS know that 1km=1000m)
-
+- Simplifying fractions (when the numerator of a fraction is a fraction it self)
+- Support for smart units (Make the CAS know that 1km=1000m)
+- Fix bug in line 24 (units not getting put up in the numerator of the fraction)
 Dependencies
 -------------
 - Python3.x
