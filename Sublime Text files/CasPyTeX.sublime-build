@@ -1,0 +1,3 @@
+{ 
+	"cmd": ["python3", "/home/esben/CasPyTeX/Data/TextCAS.py","$file"]
+}

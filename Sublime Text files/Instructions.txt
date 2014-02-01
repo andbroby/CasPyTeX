@@ -1,0 +1,7 @@
+The files CasPyTeX.tmLanguage and CasPyTeX.sublime-build go into your sublime package folder
+You have to change the CasPyTeX.sublime-build find to make it fit your system
+Put the two files in the folder:
+Windows: %APPDATA%\Sublime Text 2\Packages\User
+OS X: ~/Library/Application Support/Sublime Text 2/Packages/user
+Linux: ~/.Sublime Text 2/Packages/User
+Portable Installation: Sublime Text 2/Data/Packages/User

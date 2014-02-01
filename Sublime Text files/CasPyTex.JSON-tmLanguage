@@ -1,0 +1,92 @@
+{ "name": "CasPyTeX",
+  "scopeName": "source.CasPyTeX",
+  "fileTypes": ["cpt"],
+  "patterns": [
+		{ "name": "doesthisnameevenmatter.ssraw",
+		  "begin": "^(\\#\\?startlatex)",
+		  "beginCaptures": {
+		    "0": { "name": "constant.numeric" }
+		  },
+		  "end": "^(\\#\\?endlatex)",
+		  "endCaptures": {
+		    "0": { "name": "constant.numeric" }
+		  },
+		  "patterns": [
+		     {  "name": "entity.name.filename.find-in-files",
+		        "match": ".*"
+		                  }
+
+		  ],
+		  "contentName": ""
+		},
+        { "match": "(^\\#\\?([tT]itle|[Aa]uthor|[Dd]ate|Use_Radians|Decimal_Places|Significant_Figures|Use_Coloredoutput|Color_of_output|Or_Symbol|Definition_Symbol)=)(.*)",
+          "name": "string.ssraw",
+		  "captures": {
+		      "1": { "name": "constant.numeric.ssraw" }
+		   },
+          "comment": "Tab stops like $1, $2..."
+        },
+		{ "name": "doesthisnameevenmatter.ssraw",
+		  "begin": "(\\|\\|)",
+		  "beginCaptures": {
+		    "0": { "name": "entity.name.class.ssraw" }
+		  },
+		  "end": "(\\|\\|)",
+		  "endCaptures": {
+		    "0": { "name": "entity.name.class.ssraw" }
+		  },
+		  "patterns": [
+		     {  "name": "support.function.ssraw",
+		        "match": "(.*):=[^\\|]*"
+		                  },
+		     {  "name": "",
+		     	"match": "([Ss]olve\\()(.*)(,)(.*)(\\))[^\\|]*",
+			    "captures": {
+			       "1": { "name": "storage.ssraw" },
+			       "3": { "name": "storage.ssraw" },
+			       "5": { "name": "storage.ssraw" }
+			    },
+
+		     			  },
+		     { "name": "constant.character.ssraw",
+		       "match": "(sqrt|log|ln|sin|cos|tan|arcsin|arccos|arctan)"
+
+		     }
+
+		  ],
+		  "contentName": ""
+		},
+		{ "name": "doesthisnameevenmatter.ssraw",
+		  "begin": "(\\|)",
+		  "beginCaptures": {
+		    "0": { "name": "entity.name.class.ssraw" }
+		  },
+		  "end": "(\\|)",
+		  "endCaptures": {
+		    "0": { "name": "entity.name.class.ssraw" }
+		  },
+		  "patterns": [
+		     {  "name": "support.function.ssraw",
+		        "match": "(.*):=[^\\|]*"
+		                  },
+		     {  "name": "",
+		     	"match": "([Ss]olve\\()(.*)(,)(.*)(\\))[^\\|]*",
+			    "captures": {
+			       "1": { "name": "storage.ssraw" },
+			       "3": { "name": "storage.ssraw" },
+			       "5": { "name": "storage.ssraw" }
+			    },
+		     			  },
+		     { "name": "constant.character.ssraw",
+		       "match": "(sqrt|log|ln|sin|cos|tan|arcsin|arccos|arctan)"
+
+		     }
+
+		  ],
+		  "contentName": ""
+		}
+
+
+  ],
+  "uuid": "d267b7d8-1637-4c5c-8953-c7d1de35acce"
+}

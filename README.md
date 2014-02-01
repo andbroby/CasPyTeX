@@ -12,12 +12,11 @@ Right now, it has a working web interface which is opened by WebGUI.py
 
 It also features a .cpt interpreter. The syntax of a .cpt (CasPyTex) file is showed in Doc/TextCAS Tutorial/tutorial.cpt.pdf . It's a lot like markdown.
 
-The project is developed just for the fun of it. The code is not  well-written.
+The project is developed just for the fun of it.
 
 To-do
 -------------
 - Update the Webinterface, and remove any interfaces that are not used
-- Add documentation
 - More simplifying methods for functions (trig, logs and sqrt)
 - Still more simplifying methods for fractions (WHEN WILL IT EEEEND)
 - Support for smart units (Make the CAS know that 1km=1000m)

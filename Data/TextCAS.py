@@ -11,10 +11,20 @@ import equationsolver as equations
 import stringmanipulations
 from debugger import *
 def maybecolored(str,colorname,checkval):
+	"""
+	Sorrounds a latex strings with color if it should be colored
+	checkval is the config bool signaling if it should be colored
+	"""
 	if checkval:
 		return "{"+r"\color{"+colorname+"}"+str+"}"
 	return str
 def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the nicest both args in expressions, not list
+	"""
+	Picks the nicest simplification of inputstr (not a str, but an expression) from
+	a list of possible forms (expressions too)
+	Returns the nicest expression
+	"""
+
 	#sort away the inputstr
 	newposformoutput=[n for n in posformoutput if n!=inputstr]
 	#sort by treedepth
@@ -40,6 +50,10 @@ def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the
 
 	return nicest
 class logfile:
+	"""
+	Represents a .Caslog file
+	the functions should be self-explanatory
+	"""
 	def __init__(self,filename):
 		self.lines=["Filename:  "+str(filename)+"\n"]
 		self.filename=filename+".CASlog"
@@ -52,7 +66,14 @@ class logfile:
 		self.appendline(rawstr)
 		self.writetofile()
 
-def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to show it or not
+def displaymathcascall(matstr,approx):
+	"""
+	Inputs a string in the "mathmode" of CasPyTeX (ex: |2*3| (matstr would be "2*3)
+	and a bool specifying if the answer should be approximated
+	It will return an array [bool,str], the bool signaling if there were errors 
+	(False if there was errors)
+	the str is what it prints to the .tex file
+	"""
 	if matstr[:6] in ["solve(","Solve("]:
 		#find endsolve bracket )
 		bracketoffset=0
@@ -144,7 +165,7 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 				if simplified!=definevalue:
 					return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)+r"\;=\;"+maybecolored(simplified.tolatex(True),config.Color_of_output,config.Use_Coloredoutput)+r"\]"]
 
-				return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)+r"\]"]
+				return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+maybecolored(definevalue.tolatex(True),config.Color_of_output,config.Use_Coloredoutput)+r"\]"]
 			else:
 				raise ValueError() #just to get to the except
 		except:
@@ -166,7 +187,11 @@ def displaymathcascall(matstr,approx):#return [bool,latexstr] with bool being to
 
 
 
-def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n" bag på
+def cpttolatex(lines,filename="unnamed.tex"): 
+	"""
+	Interprets the lines of a .cpt file (lines without any "\n" in it)
+	saves a file called filename+".pdf"
+	"""
 	path=getcwd()
 	Truefilename=filename
 	if sys.platform!="win32" and "/" in filename:
@@ -363,6 +388,10 @@ def cpttolatex(lines,filename="unnamed.tex"): #lines skal være uden grimme "\n"
 #f=open("TextCAS/"+filename)
 #cpttolatex([n.replace("\n","") for n in f.readlines()],"test.cpt")
 if __name__=="__main__":
+	"""
+	Inputs the .cpt file into the cpttolatex() and it will compile and save the
+	resulting .pdf
+	"""
 	debug.lvl=0
 	if len(argv)!=2:
 		print("Bad arg, exiting")
@@ -384,12 +413,3 @@ if __name__=="__main__":
 			sys.exit()
 	lines=[n.replace("\n","") for n in cptfile.readlines()]
 	cpttolatex(lines,filename)
-
-
-
-
-
-"""
-preamble
-\documentclass{article}
-"""

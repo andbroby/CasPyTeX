@@ -1,5 +1,11 @@
 import textparser
 from debugger import *
+"""
+This is the script one can run to test all the tests in Data/Tests
+It should be fairly straight forward to see what's going on
+The syntax of a testing file should be simple; just look at the Mixed.test
+"""
+
 debug.lvl=0
 def unittest(filename,approx=False):
 	print("Starting  "+filename.replace(".test","")+"\n---")

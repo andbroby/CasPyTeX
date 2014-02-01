@@ -1,9 +1,23 @@
 import Entityclass as ent
 class equation:
+	"""
+	Represents an equation
+	has to inputs=2 expressions
+	leftexp=rightext
+	has solvingmethods, which are called when the solver runs into that class
+	"""
 	def __init__(self,leftexp,rightexp): #leftexp=rightexp
+		"""
+		Declares the variables
+		"""
 		self.leftexp=leftexp
 		self.rightexp=rightexp
 	def movesolvenumstoleftside(self,solvesideinput,constantsideinput,solvenum,firstrun=True):
+		"""
+		Returns to new expressions that are just as equal as the one you put in.
+		Should have put the solvenum on the solveside (the first index in the return value)
+
+		"""
 		solvenumstring=solvenum.num
 		if solvesideinput.contains(solvenumstring) and not constantsideinput.contains(solvenumstring):
 			return [solvesideinput,constantsideinput]
@@ -57,9 +71,18 @@ class equation:
 			newconstantside=ent.number(["0"])	
 			return self.movesolvenumstoleftside(newsolveside,newconstantside,solvenum,False)
 	def tolatex(self):
-		
+		"""
+		returns the expression in latex
+		"""
 		return self.leftexp.tolatex()+"="+self.rightexp.tolatex()
 	def solve(self,solvenum): #solvenum er instance
+		"""
+		Solves the equation for solvenum (a number instance)
+		returns an array of solutions
+
+		Right now, it returns None if there were mistakes, or the 
+		equation was True or False
+		"""
 		#simplify both sides
 		if solvenum.type()!="number":
 			raise ValueError("Bad value to solve for")
@@ -75,6 +98,13 @@ class equation:
 			return [n.simplify() for n in solvetry2]
 		return None
 	def recursesolve(self,solvesideinput,constantsideinput,solvenum): #GOT TO RETURN ARRAYS OR BOOLS
+		"""
+		The backbone of the solvefunction.
+		Solves via the solvefunctions one step at a time, and with a lot of recursion
+
+		Right now, it returns None if there were mistakes, or the 
+		equation was True or False
+		"""
 		solvestring=solvenum.num
 		solveside=solvesideinput.simplify(solvenum)
 		constantside=constantsideinput
@@ -103,6 +133,13 @@ class equation:
 		return [n.simplify() for n in solutions]
 		
 	def solveaddition(self,solveside,constantside,solvenum):
+		"""
+		The solving method if the solveside is an instance of addition
+		will try to put terms on the constantside such that there's 
+		only one term with solvenum in it.
+		If that fails, it will try to solve it as a polynomial (but
+			that function is not finished)
+		"""
 		newaddends=[]
 		newconstandsideaddends=[constantside]
 		for addend in solveside.addends:
@@ -183,6 +220,11 @@ class equation:
 			return retvar
 		return [[returnsolveside,returnconstantside]]
 	def polsolve(self,coeffarr):
+		"""
+		Solves a polynomial with the coefficients
+		input is an array of [coefficient,int of the exponent]
+		returns an array of solutions
+		"""
 		degree=max([n[1] for n in coeffarr])
 		if degree==2:
 			a=ent.number(["0"])
@@ -212,6 +254,10 @@ class equation:
 			
 			return [solutionone,solutiontwo]
 	def solveproduct(self,solveside,constantside,solvenum):
+		"""
+		Is a solving method
+		Will move constantfactors to the other side
+		"""
 		newsolvefactors=[]
 		newconstdividors=[]
 		for factor in solveside.factors:
@@ -226,6 +272,14 @@ class equation:
 			return None
 		return [[returnsolveside,returnconstant]]
 	def solvedivison(self,solveside,constantside,solvenum):
+		"""
+		is a solving method for division
+		if solvenum is in the numerator, the constantside gets multiplied
+		to the constantside
+		if solvenum is in the denominator, the denominator gets multiplied
+		to the other side, and the solveside and constantside are switched
+
+		"""
 		if not solveside.denominator.contains(solvenum.num):
 			returnsolveside=solveside.numerator
 			returnconstantside=ent.product([constantside,solveside.denominator])
@@ -236,6 +290,14 @@ class equation:
 			return [[returnsolveside,returnconstantside]]
 		return None
 	def solvepotens(self,solveside,constantside,solvenum):
+		"""
+		Is a solving method
+		if f(x)^c=k -> f(x)=k^(1/c)
+		if c^f(x)=k -> f(x)=ln(k)/ln(c)
+		else:
+			return None
+
+		"""
 		root=solveside.root
 		exponent=solveside.exponent
 		if not exponent.contains(solvenum.num):

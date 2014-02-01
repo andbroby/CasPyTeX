@@ -820,13 +820,35 @@ class number:
 			return tothisexp
 		return self
 class potens:
+	"""
+	Represents an exponentiation (a number to the power of another number)
+	accepts an array with len 2
+	arr[0]^arr[1]
+	has the following non-mandatory functions:
+		ntothe1
+		sameexponentfrac
+		antisameroot
+		antisameexponent
+		potenspotens
+		nomials
+	Has the variables:
+	arr = a copy of the input arr (not used)
+	rootandexponents= a copy of the input arr (not used either, replaced)
+	root = the root of the exponentiation (arr[0])
+	exponent = the power of the exponentiation (arr[1])
+	"""
 	def __init__(self,arr):
+		"""
+		declares the variables, quits if bad arr
+		if the root is a unit, then it self is a unit
+		"""
 		self.arr=arr
 		self.rootandexponents=arr
 		if len(arr)!=2:
 			print_stack
 			print([n.tostring() for n in arr])
-			debug(1,"FORKERT POTENS, STOPPER PROGRAMMET")
+			debug(1,"Bad potens, quitting")
+			raise ValueError("Bad potens, quitting")
 			exit()
 		self.root=arr[0]
 		self.exponent=arr[1]
@@ -951,10 +973,18 @@ class potens:
 		"""	
 		return self.evalsimplify(True)
 	def ntothe1(self,focus):
+		"""
+		Is a simplifying method (please look at Doc/Simplifying methods.pdf)
+		if the exponent is 1, it returns the root
+		"""
 		if self.exponent==number(["1"]):
 			return self.root
 		return False
 	def sameexponentfrac(self,focus): #(focus/b)^c=focus^c/b^c
+		"""
+		Is a simplifying method (please look at Doc/Simplifying methods.pdf)
+		simplifies (a/b)^c -> (a^c)/(b^c) if either a or b is a focus
+		"""
 		if self.root.type()=="division":
 			if  (focus!=None and self.root.contains(focus.tostring())) or (focus==None or (  self.root.contains(focus.tostring())==False and self.exponent.contains(focus.tostring())==False)):
 				newnumb=potens([self.root.numerator,self.exponent])
@@ -962,6 +992,10 @@ class potens:
 				return division([newnumb,newdenom])
 		return False
 	def antisameroot(self,focus):
+		"""
+		Is a simplifying method (please look at Doc/Simplifying methods.pdf)
+		transforms a^(b+c+d+...) to a^b*a^c*a^d if the focus is in the exponent addends
+		"""
 		if self.exponent.type()=="addition":
 			if focus!=None and self.exponent.contains(focus.tostring()):
 				expadds=self.exponent.addends
@@ -971,6 +1005,11 @@ class potens:
 				return maybeclass(inputarr,product)
 		return False
 	def antisameexponent(self,focus): #(b*c)^a=b^a*c^a
+		"""
+		Is a simplifying method (please look at Doc/Simplifying methods.pdf)
+		Transforms (b*c)^a  to b^a*c^a  if theres no focus, or the focus is in the
+		root factors
+		"""
 		if self.root.type()=="product":
 			if focus==None or focus!=None and self.root.contains(focus.tostring()):
 				newprod=[]
@@ -986,6 +1025,10 @@ class potens:
 		"""
 		return [self.type(),[self.root,self.exponent]]
 	def potenspotens(self,focus):
+		"""
+		Is a simplifying method (please look at Doc/Simplifying methods.pdf)
+		transforms (a^b)^c to a^(b*c) if a is the focus or there's no focus
+		"""
 		if self.root.type()=="potens":
 			if focus==None or self.root.root.contains(focus.tostring()):
 				return potens([self.root.root,product([self.root.exponent,self.exponent])])
@@ -1014,7 +1057,11 @@ class potens:
 				if k not in variables:
 					variables.append(k)
 		return variables
-	def nomials(self): #(a+b+..)^n | n i N
+	def nomials(self): #(a+b+..)^n | n in N
+		"""
+		Expands nomials (a+b+..)^n | n in N
+		Is used by the ExpandAll function, not by the simplifying function
+		"""
 		if self.root.type()=="addition":
 			newself=self.evalsimplify()
 			if newself.root.type()=="addition" and newself.exponent.type()=="number":
@@ -1091,7 +1138,31 @@ class potens:
 			return maybeclass(newarr,potens).substitute(subthisexp,tothisexp)
 		return self
 class division:
+	"""
+	Is an expression-class
+	Represents a fraction
+	Has the following non-mandatory functions:
+		numshortenfract
+		shortenevaluables
+		ndiv1
+		samerootofexponentfactors
+		samerootofexponent
+		antisameexponentfrac
+		shortfract
+		cancelfactors
+		movefactordownifalone
+		divisionasdenom
+		divisionasnum
+	Has the variables:
+		arr= a copy of the input array
+		numerator = the numerator (arr[0])
+		denominator = the denominator (arr[1])
+		isunit = bool saying if the fraction only consists of units
+	"""
 	def __init__(self,arr):
+		"""
+		Declares the variables
+		"""
 		self.arr=arr
 		self.numerator=arr[0]
 		self.denominator=arr[1]
@@ -1165,6 +1236,10 @@ class division:
 				return False
 		return True
 	def numshortenfract(self,focus=None):
+		"""
+		Not a simplifying method! (but used by one)
+		shortens fractions like 11/22 to 1/2
+		"""
 		num=self.numerator
 		denom=self.denominator
 		if num.evaluable(True) and denom.evaluable(True):
@@ -1185,6 +1260,12 @@ class division:
 				return division([number([str(newnumnum)]),number([str(newdenomnum)])])
 		return False
 	def shortenevaluables(self,focus=None):
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		depends on the numshortenfract method
+		shortens nonevaluable fractions, like
+		(100*a)/(200*b) -> a/(2*b)
+		"""
 		newnum=self.numerator.evalsimplify()
 		newdenom=self.denominator.evalsimplify()
 		if newnum.type()=="product" and newdenom.type()=="product":
@@ -1405,6 +1486,10 @@ class division:
 			return False
 		return info1[1]==info2[1]
 	def ndiv1(self,focus):
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		if the denominator is one, returns the numerator
+		"""
 		if self.denominator==newnumber(["1"]):
 			return self.numerator
 		elif self.denominator==number(["-1"]):
@@ -1412,6 +1497,11 @@ class division:
 		else:
 			return False
 	def samerootofexponentfactors(self,focus=None): #same thing as samerootofexponent, just with factors
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		simplifies things like (12*a^3/(13*a^2) to (12*a)/13
+		depends on the samerootofexponent, it's an generalisation of that function
+		"""
 		if self.numerator.type()=="product" and self.denominator.type()=="product":
 			appendtofactors=[]
 			skiptheseids=[]
@@ -1460,6 +1550,11 @@ class division:
 				return maybeclass([newnum,newdenom],division)
 		return False
 	def samerootofexponent(self,focus=None): #a^b/a^c=a^(b-c)
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		simplifies a^b/a^c if a is the focus
+		"""
+
 		debug(3,"samerootofexponent fik input: "+str(self.tostring()))
 		if self.numerator.type()=="potens" and self.denominator.type()=="potens":
 			#OLDif self.numerator.rootandexponents[0]==self.denominator.rootandexponents[0] and (focus==None or focus==self.denominator.rootandexponents[0] or addition([maybeclass(self.numerator.rootandexponents[1:],potens),product([number(["-1"]),maybeclass(self.denominator.rootandexponents[1:],potens)])]).contains(focus.tostring())==False):
@@ -1483,6 +1578,10 @@ class division:
 					return potens([newroot,addition([number(["1"]),product([number(["-1"]),self.denominator.exponent])])])
 		return False
 	def antisameexponentfrac(self,focus=None): #b^a/c^a=(b/c)^a
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		simplifies  (b^a)/(c^a) to (b/c)^a if a is the focus
+		"""
 		if self.numerator.type()=="potens" and self.denominator.type()=="potens":
 			num=self.numerator
 			denom=self.denominator
@@ -1599,6 +1698,14 @@ class division:
 		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""	
 		return [self.maxleveloftree(),2]
 	def movefactordownifalone(self,focus=None):#(2_m)/_s => 2*(_m/_s)
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		if the numerator is the fraction, it can move the factor down if
+		it is evaluable.
+		It might not though, and it's very complicated when it should do it and 
+		when it shouldnt
+		solving polynomials depends on this function to work
+		"""
 		if self.numerator.type()=="product":
 			newnum=self.numerator.moveconstantsinfront()
 			if newnum==False:
@@ -1636,6 +1743,14 @@ class division:
 			return maybeclass(newarr,division).substitute(subthisexp,tothisexp)
 		return self
 	def divisionasdenom(self,focus=None): #hvis der er division ganget på i nævneren, hæves det op
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		if the denominator is a product, and there are fractions in the denominator,
+		the whole fraction is multiplied by the reciprocal
+		eg
+		1/(2*1/2) -> (1*(2/1))/2
+		or a/(b/c) -> a*(b/c)
+		"""
 		if self.denominator.type()=="product":
 			newnumeratorfacts=[self.numerator]
 			newdenomfacts=[]
@@ -1657,12 +1772,28 @@ class division:
 			return product([self.numerator,division([self.denominator.denominator,self.denominator.numerator])])
 		return False
 	def divisionasnum(self,focus=None):
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		if the numerator is a fraction, the denominator of the numerator
+		is multiplied by the denominator of the fraction
+		(2/3)/3 -> 2/(3*3)
+		"""
 		if self.numerator.type()=="division":
 			retnum=self.numerator.numerator
 			retdenom=product([self.denominator,self.numerator.denominator])
 			return division([retnum,retdenom])
 		return False	
 class addition:
+	"""
+	Is an expressionclass
+	Represents a sum
+	Has the following non-mandatory methods:
+		antidistributive
+		associativeprop
+		NonIntrusiveAntiDistributive
+	Has the following variables:
+		addends=arr = the input array of other expression classes
+	"""
 	def __init__(self,arr):
 		self.arr=arr
 		self.addends=arr
@@ -1710,6 +1841,13 @@ class addition:
 		if len(newparts)==1:return newentitylist[0]
 		return addition(newparts)		
 	def antidistributive(self,focus=None): #k*a+n*a=(k+n)*a
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		Will find a like terms, and multiply them together, eg
+		k*a+n*a=(k+n)*a
+		It will do this if a is focus, or there's no focus
+		This is really shitty code
+		"""
 		debug(3,"antidistributive fik input: "+str(self.tostring())+" og self.addends:")
 		[debug(3,"             "+str(n.tostring())) for n in self.addends]
 		Runagain=False
@@ -1898,6 +2036,13 @@ class addition:
 				return False
 		return True
 	def associativeprop(self,focus):
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		if one of the addends is an addition class too, it will bring the addends
+		of that class into this class
+		eg a+2+(b+c) => a+2+b+c
+		This is known as associative property 
+		"""
 		newaddends=[]
 		retfalse=True
 		for n in self.addends:
@@ -1929,6 +2074,13 @@ class addition:
 		"""
 		return ExpandAll(self)
 	def NonIntrusiveAntiDistributive(self,focus=None):
+		"""
+		Is not a simplifying method!
+		does the same thing as the antidistributive method, except this
+		will only simplify k*a+n*a to (k+n)*a if k and n are evaluable
+
+		used by the ExpandAll function (in this doc)
+		"""
 		breakitall=False
 		for index1,addend1 in enumerate(self.addends):
 			for index2,addend2 in enumerate(self.addends):
@@ -2032,6 +2184,11 @@ class addition:
 		return self
 
 def ExpandAll(instance): #Expands and simplifies (a little)
+	"""
+	Expands an expression
+	This function uses the simplifying methods, but only the ones that expands,
+	and a few methods specially made for this (or with special inputs)
+	"""
 	newinstance=treesimplify(deepcopy(instance))
 	while True:
 		if newinstance.type()=="addition":
@@ -2110,6 +2267,10 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 	return treesimplify(treesimplify(newinstance).evalsimplify())
 
 def treesimplify(instance): #simplifies trees (via the 2 associativeprop() functions)
+	"""
+	Returns an instance where there are no redundant tree branches
+	this is done with the 2 associativeprop functions
+	"""
 	newinstance=instance
 	if True: #simplifyparts
 		if instance.type()=="addition":
@@ -2132,9 +2293,17 @@ def treesimplify(instance): #simplifies trees (via the 2 associativeprop() funct
 
 
 #Simplificeringsmetoder
-SimplifyClassdict=dict() #kommer til at indeholde som index typen af klassen (produkt fx) og saa en array af simplificeringsmetoder som strings
+SimplifyClassdict=dict() 
 subdict=definitiondict()
 def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for tex 0 for instance
+	"""
+	Will return an array of different alternate forms of the input expression instance
+	This is done by changing the focus, and then simplifying again.
+	You can choose to approximate the returning expression
+	stringortex: 1 if it should return the .tostring()s of the expressions,
+	2 if it should return the .tolatex()s of the expressions,
+	0 if it should return the expressiontrees (the expressionclasses) 
+	"""
 	instancecopy=deepcopy(instance)
 	instancecopy=instancecopy.makepossiblesubstitutions()
 	instancecopy=treesimplify(instancecopy)
@@ -2172,7 +2341,15 @@ def posformsimplify(instance,stringortex,approx=False): #1 for strings, 2 for te
 		return [n.tostring() for n in retvar]
 	elif stringortex==2:
 		return [n.tolatex() for n in retvar]
-def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify på strings, 2 er for latex
+def SimplifyAll(instance,focus,specialsimp=0): 
+	"""
+	Simplifies an input expression (instance) with respect to the focus
+	the third argument is deprecated
+	uses the SimplifyClassdict, there consists the simplifying methods it's allowed to 
+	use.
+	The function is (like almost every function in CasPyTeX) highly recursive, and 
+	higly unoptimized
+	"""
 	instancecopy=deepcopy(instance)
 	instancecopy=instancecopy.makepossiblesubstitutions()
 	instancecopy=treesimplify(instancecopy)
@@ -2214,7 +2391,10 @@ def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify p
 			try:
 				methodfile=open(sys.argv[0].replace("TextCAS.py","")+"Simplify Methods/"+newsimplify.type()+".simplifymethods")
 			except:
-				raise ValueError("Could not find the .simplifymethod files")
+				try:
+					methodfile=open(sys.argv[0].replace("WebGUI.py","")+"Data/"+"Simplify Methods/"+newsimplify.type()+".simplifymethods")
+				except:
+					raise ValueError("Could not find the .simplifymethod files")
 
 		rawmethods=methodfile.readlines()
 		#debug(3,"METHODS FOUND FOR CLASS:"+newsimplify.type()+"\n"+str(rawmethods))
@@ -2232,11 +2412,22 @@ def SimplifyAll(instance,focus,specialsimp=0): #specialsimp=1 betyder simplify p
 	return newsimplify.evalsimplify()
 
 def maybeclass(arr,classfunc):
+	"""
+	used to make sure that you don't call the addition function with one addend
+	used like this:
+	maybeclass(newaddends,addition)
+	One should always call maybeclass if one does not know how long the input 
+	array is
+	"""
 	if len(arr)==1:
 		return arr[0]
 	elif len(arr)>1:
 		return classfunc(arr)
 def newnumber(arr):
+	"""
+	Makes sure to handle the negative numbers.
+	When defining a number, this should always be called
+	"""
 	num=arr[0]
 	if num=="-1":
 		return number(["-1"])
@@ -2244,6 +2435,11 @@ def newnumber(arr):
 		return product([number(["-1"]),number([num[1:]])])
 	return number([num])
 def newevaluednum(inputfloat):
+	"""
+	Will return an expression of a float.
+	Used to make sure there are no numbers with the string
+	"123123E123" (that's just ugly, and look nice in Latex
+	"""
 	if inputfloat>10**9 or inputfloat<-10**9:
 		exponent=int(math.log10(inputfloat))
 		multiplier=str(inputfloat)[0]+"."+str(inputfloat).replace(".","")[1:]
@@ -2259,6 +2455,12 @@ def newevaluednum(inputfloat):
 	else:
 		return newnumber([str(inputfloat)])
 class sine:
+	"""
+	Represents the Sinefunction
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in sine class")
@@ -2426,6 +2628,12 @@ class sine:
 		return self
 
 class cosine:
+	"""
+	Represents the Cosinefunction
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in cosine class")
@@ -2594,6 +2802,12 @@ class cosine:
 
 
 class tangent:
+	"""
+	Represents the Tangent function
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in tangent class")
@@ -2761,6 +2975,12 @@ class tangent:
 		return self
 
 class arcsine:
+	"""
+	Represents the arcsinefunction
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in arcsine class")
@@ -2928,6 +3148,12 @@ class arcsine:
 			return retval.substitute(subthisexp,tothisexp)
 		return self
 class arccosine:
+	"""
+	Represents the Arccosinefunction
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in arccosine class")
@@ -3095,6 +3321,12 @@ class arccosine:
 			return retval.substitute(subthisexp,tothisexp)
 		return self
 class arctangent:
+	"""
+	Represents the Arctangent function
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in arctangent class")
@@ -3264,6 +3496,12 @@ class arctangent:
 
 
 class natlogarithm:
+	"""
+	Represents the Natural logarithm
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in natlogarithm class")
@@ -3428,6 +3666,12 @@ class natlogarithm:
 			return retval.substitute(subthisexp,tothisexp)
 		return self
 class comlogarithm: #log_10
+	"""
+	Represents the common logarithm (base 10 logarithm)
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in comlogarithm class")
@@ -3592,6 +3836,12 @@ class comlogarithm: #log_10
 			return retval.substitute(subthisexp,tothisexp)
 		return self
 class squareroot:
+	"""
+	Represents a squareroot
+	Has one variable:
+		arg, which is the len=1 array of expressions
+	sin(arg)
+	"""
 	def __init__(self,arr):
 		if len(arr)!=1:
 			raise ValueError("more than one argument in squareroot class")
@@ -3758,6 +4008,12 @@ class squareroot:
 			return retval.substitute(subthisexp,tothisexp)
 		return self
 class unknownfunction:
+	"""
+	Represents a mathematical function not hardcoded in the CAS.
+	This could be f(x), n(m,M) or something like that
+	Has two input arguments, the function string ("f","n" in the examples)
+	and an array of the arguments ([x],[m,M])
+	"""
 	def __init__(self,funcstr,inputargs):
 		self.funcstr=funcstr
 		self.args=inputargs

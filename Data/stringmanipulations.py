@@ -1,4 +1,8 @@
 def splitstringbyindexes(str,indexes):
+	"""
+	Splits a string by the indexes
+	"0123456" with indexes [3] becomes ["012","456"]
+	"""
 	returnarr=[]
 	for index,val in enumerate(indexes):
 		if index==0:
@@ -10,6 +14,9 @@ def splitstringbyindexes(str,indexes):
 	#print("SPLIT LIKE DIS",returnarr)
 	return returnarr
 def stringtoparentespar(str):
+	"""
+	Returns and array of the bracket pair indexes (brackets on the same level)
+	"""
 	startlist=[]
 	slutlist=[]
 	for index,val in enumerate(list(str)):
@@ -17,11 +24,18 @@ def stringtoparentespar(str):
 		elif val==")":slutlist.append(index)
 	return parentespar1(startlist,slutlist)
 def isinsideparentes(str,index):
+	"""
+	Finds out if an index in the string is inside any brackets
+	"""
 	parentespar=stringtoparentespar(str)
 	for n in parentespar:
 		if index>n[0] and index<n[1]:return True
 	return False
 def parentespar1(startlist,slutlist):
+	"""
+	Inputs a list of startbracket indexes, and a list of endbracket indexes,
+	and returns an array of matched bracket indexes
+	"""
 	if len(startlist)!=len(slutlist):
 		raise EOFError("Mismatching brackets")
 	parlist=[]
@@ -39,16 +53,27 @@ def parentespar1(startlist,slutlist):
 			if breakitall:break
 	return parlist
 def findcharoutsideparentes(char,str):
+	"""
+	Returns an array of index that match the char in the string outside 
+	any brackets
+	"""
 	returnindexes=[]
 	for index in range(len(str)):
 		if str[index]==char and not isinsideparentes(str,index):
 			returnindexes.append(index)
 	return returnindexes
 def ydersteparentes(parentespar):
+	"""
+	Returns the indexes of the outer bracket
+	"""
 	parentespar.sort()
 	if parentespar==[]:return None
 	return(parentespar[0])
 def sigfigroundfromstr(numberstr,sigfig):
+	"""
+	Inputs a numberstring and a int of the amount if significant figures,
+	and returns the rounded numberstring 
+	"""
 	zeroessofar=True
 	figurecounter=0
 	addzeroes=False
