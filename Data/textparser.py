@@ -151,6 +151,7 @@ if __name__=="__main__":
 	"""
 	This is just used when debugging
 	"""
-	
+	a=Entities.potens([Entities.number(["2.6561398887587544"]),TextToCAS("-5")])
+	print(a.approx().tostring())
 	pass
 	

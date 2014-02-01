@@ -2443,7 +2443,10 @@ def newevaluednum(inputfloat):
 	if inputfloat>10**9 or inputfloat<-10**9:
 		exponent=int(math.log10(inputfloat))
 		multiplier=str(inputfloat)[0]+"."+str(inputfloat).replace(".","")[1:]
-		return potens([newnumber([multiplier]),newnumber([str(exponent)])])
+		newnumber([str(inputfloat)])
+		expnumber=potens([number(["10"]),newnumber([str(exponent)])])
+
+		return pproduct([newnumber([multiplier]),expnumber])
 	elif inputfloat<0.001 and inputfloat>-0.001:
 		if inputfloat==0:
 			return number(["0"])
@@ -2451,7 +2454,14 @@ def newevaluednum(inputfloat):
 			raise ValueError("Bad translation of float")
 		else:
 			rets=str(inputfloat).split("e")
-			return potens([newnumber([rets[0]]),newnumber([rets[1]])])
+			if rets[1][0]!="-":
+				while rets[1][0]=="0":
+					rets[1]="".join([n[1] for n in enumerate(rets[1]) if n[0]!=0])
+			else:
+				while rets[1][1]=="0":
+					rets[1]="-"+"".join([n[1] for n in enumerate(rets[1]) if n[0] not in [0,1]])
+			retexp=potens([number(["10"]),newnumber([rets[1]])])
+			return product([newnumber([rets[0]]),retexp])
 	else:
 		return newnumber([str(inputfloat)])
 class sine:
