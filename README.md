@@ -3,6 +3,11 @@ CasPyTeX
 ![alt tag](http://i.imgur.com/14PCKRd.png)
 
 *CasPyTex is able to solve equations with units. The blue color is optional, and can be changed in the config.*
+![alt tag](http://i.imgur.com/iOaXNtj.png)
+
+*CasPyTeX Comes with syntax highlighting in Sublime Text*
+
+
 
 **CasPyTex is still in development, so there's almost definitely bugs**
 
@@ -18,7 +23,7 @@ To-do
 -------------
 - Update the Webinterface, and remove any interfaces that are not used
 - More simplifying methods for functions (trig, logs and sqrt)
-- Still more simplifying methods for fractions (WHEN WILL IT EEEEND)
+- Still more simplifying methods for fractions 
 - Support for smart units (Make the CAS know that 1km=1000m)
 - Solving methods for more of the expression classes
 

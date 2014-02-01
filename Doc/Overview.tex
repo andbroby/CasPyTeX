@@ -1,0 +1,44 @@
+\documentclass[11pt]{article}
+\setlength{\topmargin}{-.5in}
+\setlength{\textheight}{9in}
+\setlength{\oddsidemargin}{.125in}
+\setlength{\textwidth}{6.25in}
+\usepackage{ae,aecompl}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{color}
+\usepackage{changepage}
+\title{File overview}
+\begin{document}\maketitle\noindent
+This is an overview of the project
+\section*{The root directory}
+\begin{adjustwidth}{1em}{0pt}
+\textbf{WebGUI.py} - The webserver that handles the Web Interface
+\\\\\textbf{Sublime Text Files} - Integration with Sublime Text (look at instructions)
+\\\\\textbf{Doc} - Documentation 
+\\\begin{adjustwidth}{1em}{0pt}
+\\\textbf{Tutorial} - Tutorial.cpt.pdf helps you get started using CasPyTex
+\\\\\textbf{Data}
+\\\begin{adjustwidth}{1em}{0pt}
+	\textbf{Simplify Methods} - Holds the .simplifymethods files
+	\\\\\textbf{Tests} - The .test files
+	\\\\\textbf{Web Interface} - The Website for the Web Interface
+	\\\\\textbf{CasPyTeXConfig.py} - The config - Uses python syntax
+	\\\\\textbf{debugger.py} - A very simple debugging module
+	\\\\\textbf{Entityclass.py} - The core of the CAS - holds the expression classes, as well as the Simplifying function
+	\\\\\textbf{equationsolver.py} - Has the class equation, which is able to solve equations
+	\\\\\textbf{latexfileclass.py} - Has the latexfile class, which can write a .tex and compile it to a .pdf
+	\\\\\textbf{stringmanipulations.py} - Has some (not so) neat functions concerning strings
+	\\\\\textbf{TextCAS.py} - The .cpt interpreter
+	\\\\\textbf{textparser.py} - has the TextToCAS function, which converts strings to expression trees
+	\\\\\textbf{unittester.py} - A script to execute the unit tests
+\end{adjustwidth}
+\end{adjustwidth}
+\end{adjustwidth}
+You might want to look at:
+\begin{itemize}
+\item Doc/Expression Class.pdf
+\item Doc/Simplifying Methods.pdf
+\item Doc/Tutorial/Tutorial.cpt.pdf
+\end{itemize}
+\end{document}
