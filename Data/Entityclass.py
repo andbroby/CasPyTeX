@@ -138,24 +138,26 @@ class definitiondict:
 cancallisunit=["number","potens","division","product"]
 class product:
 	"""
-	Represents a product, and is an expressionclass (i'll define that in a txt file sometime)
-	Has the following functions that needs to be in an expressionclass:
-		type
-		tostring
-		tolatex
-		simplify
-		maxleveloftree
-		evaluable
-		evalsimplify
-		simplifyallparts
-		contains
-		approx
-		__eq__
-		compareinfo
-		findvariables
+	Represents a product, and is an expressionclass (Look at Doc/Expresion class.pdf)
+	Has the following methods (not listing the mandatory methods):
+		delfactor
+		evalpart (not really used)
+		moveconstantsinfront 
 		ntimes0
+		associativeprop
+		sameroot
+		sameexponent
+		distributive
+		fractionasfactor
+	Has the variables:
+		self.arr= a copy of the input arr
+		self.factors= the arr is just the array of all the factors
+		self.isunit= A bool specifying if the whole product is made of units (strings with _ before)
 	"""
 	def __init__(self,arr): 
+		"""
+		Declares the variables, finds out if the products consists of only units
+		"""
 		self.arr=arr
 		self.factors=arr
 		self.isunit=True
@@ -164,9 +166,10 @@ class product:
 				self.isunit=False
 				break
 	def type(self):
-		
+		"""Returns the name of the class as a string"""
 		return "product"
 	def tostring(self,substitute=False):###
+		"""Returns the product as a readable expression in a string"""
 		returnstring=""
 		minuscounter=0
 		newfactors=[]
@@ -188,6 +191,11 @@ class product:
 		if returnstring[-1]=="*":returnstring=returnstring[:-1]
 		return returnstring
 	def tolatex(self,roundit=False):
+		"""Returns the product in a readable LaTeX expression 
+		(no "$" before and after, you have to insert those)
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		returnstring=""
 		minuscounter=0
 		newfactors=[]
@@ -209,9 +217,11 @@ class product:
 		if returnstring[-6:]==r"\cdot ":returnstring=returnstring[:-6]
 		return returnstring
 	def simplify(self,focus=None,thrd=0):###
-
+		"""Returns a simplified version of itself"""
 		return SimplifyAll(self,focus,thrd)
 	def delfactor(self,index):
+		"""Inputs an index, 
+		and returns a product class with the factor with that index removed"""
 		copy=self.factors[:]
 		copy.pop(index)
 		if copy==[]:
@@ -220,14 +230,21 @@ class product:
 
 		return product(copy)
 	def maxleveloftree(self,level=0):
-		
+		"""Returns the depth of the expression tree"""
 		return max([n.maxleveloftree(level+1) for n in self.factors])
 	def evaluable(self,approx=False):
+		"""Returns a bool about wether the product can be expressed as one int (approx=False)
+		or one float (approx=True)"""
 		for k in self.factors:
 			if not k.evaluable(approx):
 				return False
 		return True
 	def evalsimplify(self,approx=False):
+		"""
+		Returns a product where the first factor is an evalsimplified version of of all evaluable factors
+		eg approx=False "2*2.5*a*b" -> "5*a*b" #because 2*2.5 is an int
+		approx=True "2.13*4*a*b"-> "8.52*a*b"
+		"""
 		newfactors=[n.evalsimplify(approx) for n in self.factors]
 		#small associative property
 		newnewfactors=[]
@@ -250,37 +267,21 @@ class product:
 		if evalfactor%1==0:
 			evalfactor=int(evalfactor)
 		if nonevaluableparts==[]:
+			if evalfactor%1!=0 and not approx:
+				return self
 			return newevaluednum(evalfactor)
 		if evalfactor==1:
 			return maybeclass(nonevaluableparts,product)
 		else:
+			if evalfactor%1!=0 and not approx:
+				return self
 			return maybeclass([newevaluednum(evalfactor)]+nonevaluableparts,product)
 	
 	def evalpart(self,approx=False):
+		"""did something that the evalsimplify function does now"""
 		return self.evalsimplify(approx)
-		#newarr=[]
-		#proddy=1
-		#for n in self.factors:
-		#	if n.evaluable(approx):
-		#		proddy*=float(n.tostring())
-		#	else:
-		#		newarr.append(n)
-		#if proddy%1==0:proddy=int(proddy)
-		#if proddy==1:
-		#	retval=newarr
-		#else: 
-		#	retval=[newnumber([str(proddy)])]+newarr
-		#newretval=[]
-		#for n in retval:
-		#	if n.type()=="product":
-		#		newretval+=n.factors
-		#	else:
-		#		newretval.append(n)
-		#retval=maybeclass(newretval,product)
-		#if retval.type=="product" and retval.moveconstantsinfront()!=False:
-		#	retval=retval.moveconstantsinfront()
-		#return maybeclass(newretval,product)
 	def moveconstantsinfront(self,focus=None):
+		"""returns a product where the evaluable factors are the first factors"""
 		toputback=[]
 		toputinfront=[]
 		factorwindex=[[self.factors[k],k] for k in range(len(self.factors))]
@@ -294,12 +295,23 @@ class product:
 			return product([n[0] for n in newfactors])
 		return False
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		newparts=[]
 		for n in self.factors:
 			newparts.append(n.simplify(focus))
 		if len(newparts)==1:return newparts[0]
 		return product(newparts)
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()		
 		for n in self.factors:
@@ -307,9 +319,16 @@ class product:
 				return True
 		return False
 	def approx(self):
-		
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Checks if one expression is equal to the other
+		It's not done by comparing the two .tostring(),
+		but it's not that smart either 
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:
 			return False
 		if type(other)==type(str()):return False
@@ -333,9 +352,14 @@ class product:
 				return False
 		return True
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""	
 		return [self.type(),self.factors]
 	def findvariables(self):
+		"""Returns an array of strings of the variables in the expression"""
 		variables=[]
 		for n in self.factors:
 			for k in n.findvariables():
@@ -343,6 +367,10 @@ class product:
 					variables.append(k)
 		return variables
 	def ntimes0(self,focus):
+		"""
+		Simplifying method (look at Doc/Simplifying methods.pdf)
+		if one factor is 0, returns number(["0"])
+		"""
 		zeroed=False
 		for n in self.factors:
 			if n==number(["0"]):
@@ -351,6 +379,16 @@ class product:
 			return number(["0"])
 		return False
 	def associativeprop(self,focus=None):
+		"""
+		Simplifying method: (please look at Doc/Simplifying methods.pdf)
+		simplifies things like product([number(["2"]),product(number(["a"]),number(["b"])])
+		to product(number(["2"]),number(["a"]),number(["b"])
+		This is known as the associative property
+		Does not simplify the products for negative numbers, which is a special instance of a product
+		with one factor being number(["-1"])
+
+		This is used by the treesimplify function
+		"""
 		newfactors=[]
 		retfalse=True
 		for n in self.factors:
@@ -363,6 +401,18 @@ class product:
 			return False
 		return maybeclass(newfactors,product)
 	def sameroot(self,focus,nonintrusive=False):
+		"""
+		Simplifying method: (please look at Doc/Simplifying methods.pdf)
+		Simplifies if the factors can be expressed as two exponentations 
+		with the same root
+		ie a^b*a^c=a^(b+c)
+		This is only done if there's no focus, or the focus is the root
+		if nonintrusive=True, then it will only simplify if the exponents are evaluable 
+		Nonintrusive is used by the ExpandAll function
+		
+		This function will also work when an exponent of one is implied,
+		like "a*a^c" ->"a^(c+1)"
+		"""
 		worked=False
 		breakall=False
 		for in1,fac1 in enumerate(self.factors):
@@ -445,6 +495,11 @@ class product:
 			return maybeclass(newfactors,product)
 		return False
 	def sameexponent(self,focus):#b^a*c^a=(b*c)^a
+		"""
+		Simplifying method: (please look at Doc/Simplifying methods.pdf)
+		Will simplify things like "b^a*c^a" -> "(b*c)^a" if a is focus.
+
+		"""
 		worked=False
 		breakall=False
 		for in1,fac1 in enumerate(self.factors):
@@ -456,6 +511,12 @@ class product:
 							return potens([product([fac1.root,fac2.root]),fac1.exponent])
 		return False
 	def distributive(self,focus):
+		"""
+		Simplifying method: (please look at Doc/Simplifying methods.pdf)
+		distributes brackets like a*(b+c) -> a*b+a*c
+		If focus=="force" (a string), then it will force a distribution
+		else, it will distribute if the bracket contains the focus
+		"""
 		for factor in self.factors:
 			if factor.type()=="addition":
 				if focus=="force" or (focus!=None and factor.contains(focus.tostring())):
@@ -467,16 +528,33 @@ class product:
 
 		return False
 	def expand(self):
-		
+		"""
+		Returns the expanded form of itself
+		"""		
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"PRODUCT: "+self.tostring())
 		for n in self.factors:
 			n.printtree(rec+1)
 	def fractionasfactor(self,focus=None): #ganger hele tal op til nævner, eller brøker med brøker
+		"""
+		Simplifying method: (please look at Doc/Simplifying methods.pdf)
+		if one factor is a fraction, it will simplify if other factors should be in the numerator
+		of the fraction
+		This will be done if simplifications can be made to the fraction with the factor in the
+		numerator
+		"""
 		for in1,factor1 in enumerate(self.factors):
 			for in2,factor2 in enumerate(self.factors):
 				if in1==in2:continue
@@ -520,6 +598,10 @@ class product:
 					#	return maybeclass(newfactors,product)
 		return False
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		newfactors=[]
 		for n in self.factors:
 			newfactors.append(n.makepossiblesubstitutions())
@@ -528,6 +610,11 @@ class product:
 		else:
 			return self
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")		
 		newfactors=[]
@@ -538,28 +625,51 @@ class product:
 		else:
 			return self
 	def getsimplifyscore(self):
-		
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""		
 		return [self.maxleveloftree(),len(self.factors)]
+
 class number:
-	def __init__(self,arr,isfunction=False):
+	"""
+	An expression class that represents a number or a variable
+	examples: "a","k_{a}","3","331231"
+	Has no simplifying functions
+	Has variables:
+		self.arr= a copy of the input arr
+		self.num= The string of the number, eg "a" or "2223" or "ladafsdf"
+		self.isunit=Bool specifying if it's a unit or not (starts with "_" and is not "_e" or "_pi")
+	"""
+	def __init__(self,arr):
+		"""
+		Declares the variables
+		"""
 		self.arr=arr
 		if len(arr)!=1:
 			raise ValueError("WRONG NUMBER")
 		self.num=arr[0]
 		self.isunit=False
-		self.isfunction=isfunction
-		if self.num[0]=="_":
+		if self.num[0]=="_" and self.num!="_e" and self.num!="_pi":
 			self.isunit=True
 	def type(self):
-		
+		"""Returns the name of the class as a string"""
 		return "number"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		if self.num=="_pi":
 			return "pi"
 		elif self.num=="_e":
 			return "_e"
 		return self.num
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		if self.num=="_pi":
 			return r"\pi"
 		elif self.num=="_e":
@@ -571,14 +681,28 @@ class number:
 			return rounded
 		return self.num
 	def simplify(self,focus=None,thrd=0):###
-		"""if self.evaluable():
-			if float(self.num)%1==0:
-				return number([str(int(float(self.num)))])"""
+		"""
+		Returns a simplified version of itself. Will also makesubstitutions
+		"""
 		return self.makepossiblesubstitutions()
 	def maxleveloftree(self,level=0):
-		
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return level+1
 	def evaluable(self,approx=False):
+		"""
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if self.num in ["_pi","_e"] and approx:
 			return True
 		for n in self.num:
@@ -586,6 +710,16 @@ class number:
 				return False
 		return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not 
+
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+		"""
 		if approx and self.num in ["_pi","_e"]:
 			if self.num=="_pi":
 				return newevaluednum(math.pi)
@@ -597,45 +731,89 @@ class number:
 				return number([str(int(float(self.num)))])
 		return self
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
 		if varstring==None:
 			return self.evaluable()
 		if varstring==self.num:return True
 		return False
 	def simplifyallparts(self,approx=False):		
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		since this is the number class, it just returns self
+		"""
 		return self
 	def compareinfo(self):
-
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),self.num]
 	def approx(self):
-		
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,recursionNOTUSED=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if type(other)==type(str()):return False
 		if other in [None,False,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if self.type()!=other.type():
 			return False
 		return self.num==other.num
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""	
 		if not self.evaluable(True):
 			return [self.num]
 		return []
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return self
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""		
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
-		
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+self.num)
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		testifsubavailable=subdict.findsubstitute(self)
 		if testifsubavailable!=False:
 			return testifsubavailable.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)
+		A number is really "nice", and will therefore return [1,1]
+		"""
 		return [1,1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		if subthisexp.num==self.num:
@@ -656,9 +834,13 @@ class potens:
 		if self.root.type()=="number" and self.root.isunit:
 			self.isunit=True
 	def type(self):
-		
+		"""Returns the name of the class as a string"""
 		return "potens"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		returnstring=""
 		for n in self.rootandexponents:
 			if n.type()!="number":
@@ -669,6 +851,12 @@ class potens:
 			returnstring=returnstring[:-1]
 		return returnstring
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		returnstring=""
 		if self.root.type()!="number":
 			returnstring+=r"\left("+self.root.tolatex(roundit)+r"\right)^"
@@ -679,12 +867,31 @@ class potens:
 			returnstring=returnstring[:-1]
 		return returnstring
 	def simplify(self,focus=None,thrd=0):#
-		
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
-		
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return max([n.maxleveloftree(level+1) for n in self.rootandexponents])
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
+
 		if self.root.evaluable(approx) and self.exponent.evaluable(approx):
 			return True
 		else:
@@ -693,6 +900,16 @@ class potens:
 					return True
 			return False
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		newroot=self.root.evalsimplify(approx)
 		newexponent=self.exponent.evalsimplify(approx)
 		if newroot.evaluable(approx) and newexponent.evaluable(approx):
@@ -704,6 +921,10 @@ class potens:
 			return newevaluednum(evaluated)
 		return potens([newroot,newexponent])
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		newparts=[]
 		for n in self.rootandexponents:
 			newparts.append(n.simplify(focus))
@@ -711,6 +932,13 @@ class potens:
 		if len(newparts)==1:return newparts[0]
 		return potens(newparts)
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		for n in self.rootandexponents:
@@ -718,7 +946,9 @@ class potens:
 				return True
 		return False
 	def approx(self):
-		
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def ntothe1(self,focus):
 		if self.exponent==number(["1"]):
@@ -749,7 +979,11 @@ class potens:
 				return product(newprod)
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.root,self.exponent]]
 	def potenspotens(self,focus):
 		if self.root.type()=="potens":
@@ -757,6 +991,10 @@ class potens:
 				return potens([self.root.root,product([self.root.exponent,self.exponent])])
 		return False	
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -769,6 +1007,7 @@ class potens:
 			return False
 		return info1[1]==info2[1]
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		variables=[]
 		for n in [self.root,self.exponent]:
 			for k in n.findvariables():
@@ -803,14 +1042,31 @@ class potens:
 							proddy=newproddy
 		return False
 	def expand(self):
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"POTENS: "+self.tostring())
 		for n in [self.root,self.exponent]:
 			n.printtree(rec+1)
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		newarr=[]
 		for n in [self.root,self.exponent]:
 			newarr.append(n.makepossiblesubstitutions())
@@ -818,8 +1074,14 @@ class potens:
 			return maybeclass(newarr,potens).makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),2]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		newarr=[]
@@ -842,9 +1104,13 @@ class division:
 			if self.denominator.type() in ["number","potens"] and self.denominator.isunit:
 				self.onelineprint=True
 	def type(self):
-		
+		"""Returns the name of the class as a string"""
 		return "division"
 	def tostring(self,substitute=False):#
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		taeller=self.numerator.tostring()
 		naevner=self.denominator.tostring()
 		if "*" in taeller or "+" in taeller or "-" in taeller or "/" in taeller:
@@ -853,17 +1119,41 @@ class division:
 			naevner="("+naevner+")"
 		return taeller+"/"+naevner
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		if self.onelineprint:
 			return self.numerator.tolatex(roundit)+"/"+self.denominator.tolatex(roundit)
 		else:
 			return r"\frac{"+self.numerator.tolatex(roundit)+"}{"+self.denominator.tolatex(roundit)+"}"
 	def simplify(self,focus=None,thrd=0):#
-		
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
-		
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return max([n.maxleveloftree(level+1) for n in [self.numerator,self.denominator]])
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		for k in [self.numerator,self.denominator]:
 			if not k.evaluable(approx):
 				return False
@@ -1010,6 +1300,17 @@ class division:
 				return division([retnum,retdenom])
 		return False
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		since this is division class, this evalsimplify method will also try to shorten fractions
+		"""
 		newnum=self.numerator.evalsimplify(approx)
 		newdenom=self.denominator.evalsimplify(approx)
 		if approx:
@@ -1051,6 +1352,10 @@ class division:
 		else:
 			raise ValueError
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		newparts=[]
 		for n in [self.numerator,self.denominator]:
 			newparts.append(n.simplify(focus))
@@ -1058,6 +1363,13 @@ class division:
 		if len(newparts)==1:return newparts[0]
 		return division(newparts)
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		for n in [self.numerator,self.denominator]:
@@ -1065,11 +1377,22 @@ class division:
 				return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.numerator,self.denominator]]
 	def approx(self):
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -1169,6 +1492,7 @@ class division:
 
 		return False
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		variables=[]
 		for n in [self.numerator,self.denominator]:
 			for k in n.findvariables():
@@ -1176,12 +1500,23 @@ class division:
 					variables.append(k)
 		return variables
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"DIVISION: "+self.tostring())
 		for n in [self.numerator,self.denominator]:
 			n.printtree(rec+1)
@@ -1250,6 +1585,10 @@ class division:
 					return number(["1"])
 		return False
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		newarr=[]
 		for n in [self.numerator,self.denominator]:
 			newarr.append(n.makepossiblesubstitutions())
@@ -1257,6 +1596,7 @@ class division:
 			return maybeclass(newarr,division).makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""	
 		return [self.maxleveloftree(),2]
 	def movefactordownifalone(self,focus=None):#(2_m)/_s => 2*(_m/_s)
 		if self.numerator.type()=="product":
@@ -1282,6 +1622,11 @@ class division:
 					return product([multiplier,division([maybeclass(newnum.factors[1:],product),self.denominator])])
 		return False
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		newarr=[]
@@ -1322,24 +1667,43 @@ class addition:
 		self.arr=arr
 		self.addends=arr
 	def type(self):
-		
+		"""Returns the name of the class as a string"""
 		return "addition"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		mathstring=""
 		for n in [n.tostring() for n in self.arr]:
 			if mathstring!="" and n[0]!="-":mathstring+="+"
 			mathstring+=n
 		return mathstring
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		mathstring=""
 		for n in [n.tolatex(roundit) for n in self.arr]:
 			if mathstring!="" and n[0]!="-":mathstring+="+"
 			mathstring+=n
 		return mathstring
 	def simplify(self,focus=None,thrd=0):
-		
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
+
 		return SimplifyAll(self,focus,thrd)
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		newparts=[]
 		for n in self.addends:
 			newparts.append(n.simplify(focus))
@@ -1423,14 +1787,38 @@ class addition:
 				return simplifiedsum
 		return False
 	def maxleveloftree(self,level=0):
-		
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return max([n.maxleveloftree(level+1) for n in self.addends])
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		for k in self.addends:
 			if not k.evaluable(approx):
 				return False
 		return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		newaddends=[n.evalsimplify(approx) for n in self.addends]
 		evaluedsum=0
 		newnewaddends=[]
@@ -1463,6 +1851,13 @@ class addition:
 			retval=[newnumber([str(summy)])]+newarr
 		return maybeclass(retval,addition)
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		for n in self.addends:
@@ -1470,9 +1865,17 @@ class addition:
 				return True
 		return False
 	def compareinfo(self):
-
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),self.addends]
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -1507,9 +1910,12 @@ class addition:
 			return False
 		return maybeclass(newaddends,addition)
 	def approx(self):
-		
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		variables=[]
 		for n in self.addends:
 			for k in n.findvariables():
@@ -1517,7 +1923,10 @@ class addition:
 					variables.append(k)
 		return variables
 	def expand(self):
-
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def NonIntrusiveAntiDistributive(self,focus=None):
 		breakitall=False
@@ -1579,12 +1988,25 @@ class addition:
 
 		return False						
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"ADDITION: "+self.tostring())
 		for n in self.addends:
 			n.printtree(rec+1)
 	def posforms(self,stringortex,approx=False):
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		newarr=[]
 		for n in self.addends:
 			newarr.append(n.makepossiblesubstitutions())
@@ -1592,8 +2014,14 @@ class addition:
 			return maybeclass(newarr,addition).makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""	
 		return [self.maxleveloftree(),len(self.addends)]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		newarr=[]
@@ -1836,21 +2264,62 @@ class sine:
 			raise ValueError("more than one argument in sine class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "sine"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "sin("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\sin\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
@@ -1861,21 +2330,42 @@ class sine:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return sine([self.arg.simplify(focus)])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -1888,24 +2378,46 @@ class sine:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"sine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval=sine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=sine([self.arg.substitute(subthisexp,tothisexp)])
@@ -1919,21 +2431,62 @@ class cosine:
 			raise ValueError("more than one argument in cosine class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "cosine"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "cos("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\cos\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
@@ -1944,21 +2497,42 @@ class cosine:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return cosine([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -1971,24 +2545,46 @@ class cosine:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"cosine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= cosine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=cosine([self.arg.substitute(subthisexp,tothisexp)])
@@ -2003,21 +2599,62 @@ class tangent:
 			raise ValueError("more than one argument in tangent class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "tangent"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "tan("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\tan\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
@@ -2028,21 +2665,42 @@ class tangent:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return tangent([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2055,24 +2713,46 @@ class tangent:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"tangent: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= tangent([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=tangent([self.arg.substitute(subthisexp,tothisexp)])
@@ -2086,21 +2766,62 @@ class arcsine:
 			raise ValueError("more than one argument in arcsine class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "arcsine"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "arcsin("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\arcsin\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if eval(newarg.tostring().replace("^","**"))>1 or eval(newarg.tostring().replace("^","**"))<-1:return self
@@ -2112,21 +2833,42 @@ class arcsine:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return arcsine([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2139,24 +2881,46 @@ class arcsine:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"arcsine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval=arcsine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=arcsine([self.arg.substitute(subthisexp,tothisexp)])
@@ -2169,21 +2933,62 @@ class arccosine:
 			raise ValueError("more than one argument in arccosine class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "arccosine"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "arccos("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\arccos\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if eval(newarg.tostring().replace("^","**"))>1 or eval(newarg.tostring().replace("^","**"))<-1:return self
@@ -2195,21 +3000,42 @@ class arccosine:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return arccosine([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2222,24 +3048,46 @@ class arccosine:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"arccosine: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= arccosine([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=arccosine([self.arg.substitute(subthisexp,tothisexp)])
@@ -2252,21 +3100,63 @@ class arctangent:
 			raise ValueError("more than one argument in arctangent class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "arctangent"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "arctan("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\arctan\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if Use_Radians:
@@ -2277,21 +3167,42 @@ class arctangent:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return arctangent([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2304,24 +3215,46 @@ class arctangent:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"arctangent: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= arctangent([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=arctangent([self.arg.substitute(subthisexp,tothisexp)])
@@ -2336,21 +3269,62 @@ class natlogarithm:
 			raise ValueError("more than one argument in natlogarithm class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "natlogarithm"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "ln("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\ln\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if eval(newarg.tostring().replace("^","**"))<=0:return self
@@ -2359,21 +3333,42 @@ class natlogarithm:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return natlogarithm([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2386,24 +3381,46 @@ class natlogarithm:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"natlogarithm: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= natlogarithm([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=natlogarithm([self.arg.substitute(subthisexp,tothisexp)])
@@ -2416,21 +3433,62 @@ class comlogarithm: #log_10
 			raise ValueError("more than one argument in comlogarithm class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "comlogarithm"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "log("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\log\left("+self.arg.tolatex(roundit)+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			if eval(newarg.tostring().replace("^","**"))<=0:return self
@@ -2439,21 +3497,42 @@ class comlogarithm: #log_10
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return comlogarithm([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2466,24 +3545,46 @@ class comlogarithm: #log_10
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"comlogarithm: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= comlogarithm([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=comlogarithm([self.arg.substitute(subthisexp,tothisexp)])
@@ -2496,21 +3597,62 @@ class squareroot:
 			raise ValueError("more than one argument in squareroot class")
 		self.arg=arr[0]
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "squareroot"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return "sqrt("+self.arg.tostring()+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return r"\sqrt{"+self.arg.tolatex(roundit)+r"}"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return self.arg.maxleveloftree(level+1)
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		if not self.arg.evaluable():
 			return False
 		if approx:
 			return True
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+
+		"""
 		if self.evaluable(approx):
 			newarg=self.arg.evalsimplify(approx)
 			newnum=eval(newarg.tostring().replace("^","**"))
@@ -2521,21 +3663,42 @@ class squareroot:
 		else:
 			return self	
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return squareroot([self.arg.simplify()])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		if self.arg.contains(varstring):
 			return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.arg]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2548,25 +3711,46 @@ class squareroot:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"squareroot: "+self.tostring())
 		self.arg.printtree(rec+1)
 	def findvariables(self):
-		
+		"""Returns and array of strings of the variables in the expression"""
 		return self.arg.findvariables()
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval= squareroot([self.arg.makepossiblesubstitutions()])
 		if retval!=self:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=squareroot([self.arg.substitute(subthisexp,tothisexp)])
@@ -2578,23 +3762,74 @@ class unknownfunction:
 		self.funcstr=funcstr
 		self.args=inputargs
 	def type(self):
+		"""Returns the name of the class as a string"""
 		return "unknownfunction"
 	def tostring(self,substitute=False):
+		"""
+		Returns the expression readable as a mathematical expression (string)
+		eg returnvalue ='2123*a*ln(12^2)'
+		"""
 		return self.funcstr+"("+"".join([n.tostring()+"," for n in self.args])[:-1]+")"
 	def tolatex(self,roundit=False):
+		"""
+		Returns a string of the expression that can be read in mathmode 
+		in LaTeX
+		If roundit=True, it will round numbers in the expression to a 
+		number of config.Significant_Figures
+		"""
 		return self.funcstr+r"\left("+"".join([n.tolatex()+"," for n in self.args])[:-1]+r"\right)"
 	def simplify(self,focus=None,thrd=0):###
+		"""
+		Returns a simplified (and substituted) version
+		of itself. This is handled for every expressionclass by the SimplifyAll function
+		(also in this script)
+		"""
 		return SimplifyAll(self,focus,thrd)
 	def maxleveloftree(self,level=0):
+		"""
+		Returns the maximum depth of the expression tree
+		Used for finding the nicest simplification
+		"""
 		return max([n.maxleveloftree(level+1) for n in self.args])
 	def evaluable(self,approx=False):
+		"""		
+		Returns a bool:
+		if approx=True:
+			returns True if this class instance is evaluable (can be simplified to a number like 2312.234)
+			to a float
+			returns False if not
+		if approx=False:
+			return True if this class instance is evaluable (can be simplified to a number like 323)
+			to an integer
+			returns False if not
+		"""
 		return False
 	def evalsimplify(self,approx=False):
+		"""
+		Will try to join evaluable items in the array (addends, factors, numerators and denominators)
+		if approx=True:
+			it will join the evaluable items in the array if they can be simplified to a real number
+		if approx=False:
+			it will join the evaluable items in the array if they can be simplified to an integer
+		will return self if not
+		Evalsimplify works all the way down; if you evalsimplify() you do it to the whole tree
+		"""
 		return self
 	def simplifyallparts(self,focus):
+		"""
+		Simplifies all parts (addends, factors, (numerators and denominators)...)
+		The WHOLE tree gets simplified, apart from the the upper class
+		"""
 		
 		return unknownfunction(self.funcstr,[n.simplify(focus) for n in self.args])
 	def contains(self,varstring):
+		"""
+		Returns a bool wether or wether not the varstring is a variable in the expression
+		eg if varstring="a" and expression="3*2/a" it will return True
+		but if varstring="ac" and expression="3*2/a" it will return False
+		can also be used to check if units is in the expression
+		"""
+
 		if varstring==None:
 			return self.evaluable()
 		for n in self.args:
@@ -2602,12 +3837,22 @@ class unknownfunction:
 				return True
 		return False
 	def compareinfo(self):
-		
+		"""
+		Returns and array of the type and the arr that was inputted 
+		(addends, factors, (numerators and denominators)...)
+		used by __eq__
+		"""
 		return [self.type(),[self.funcstr,self.args]]
 	def approx(self):
-	
+		"""
+		returns self.evalsimplify(True), which means that it will approximat some values
+		"""	
 		return self.evalsimplify(True)
 	def __eq__(self,other,firstrecursion=False):
+		"""
+		Returns a bool specifying if one expression is equal to the other
+		This is not done by comparing strings.
+		"""
 		if other in [False,None,"ThisIsTheSafestValueIcanThinkOf"]:return False
 		if type(other)==type(str()):return False
 		if firstrecursion:
@@ -2620,15 +3865,27 @@ class unknownfunction:
 			return False
 		return info1[1]==info2[1]
 	def expand(self):
-		
+		"""
+		Returns and expanded version of itself. This is done by the
+		global function ExpandAll (in this .py)
+		"""
 		return ExpandAll(self)
 	def posforms(self,stringortex,approx=False):
-		
+		"""
+		Returns an array of alternate forms of the expression.
+		Is handled by the global function posformsimplify
+		stringortex:
+			0 if the return array should be expression trees
+			1 if the return array should be strings
+			2 if the return array should be latex strings
+		"""
 		return posformsimplify(self,stringortex,approx)
 	def printtree(self,rec=0):
+		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"unknownfunction:"+self.tostring())
 		[n.printtree(rec+1) for n in self.args]
 	def findvariables(self):
+		"""Returns and array of strings of the variables in the expression"""
 		variables=[]
 		for n in self.args:
 			for k in n.findvariables():
@@ -2636,6 +3893,10 @@ class unknownfunction:
 					variables.append(k)
 		return variables
 	def makepossiblesubstitutions(self):
+		"""
+		returns a substituted version of itself (and itself, if no substitution is available)
+		substitutes defined variables and functions using the definitiondict 
+		"""
 		retval=subdict.findfuncsub(self.funcstr,self.args)
 		if retval!=False:
 			return retval.makepossiblesubstitutions()
@@ -2644,8 +3905,14 @@ class unknownfunction:
 			return retval.makepossiblesubstitutions()
 		return self
 	def getsimplifyscore(self):
+		"""Used for finding the nicest simplification (by a function in TexTCAS.py)"""
 		return [self.maxleveloftree(),1]
 	def substitute(self,subthisexp,tothisexp):
+		"""
+		substitutes one expression to the other
+		from subthisexp to tothisexp
+		returns the substituted version, or itself if no substitution can be made
+		"""
 		if subthisexp.type()!="number":
 			raise ValueError("bad substitution number")
 		retval=unknownfunction(self.funcstr,[n.substitute(subthisexp,tothisexp) for n in self.args])
