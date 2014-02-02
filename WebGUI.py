@@ -7,17 +7,31 @@ import sys
 #CAS IMPORTS
 sys.path.insert(0, 'Data/')
 import textparser as cas
+from TextCAS import displaymathcascall
+from debugger import *
+import CasPyTexConfig as config
 FILE = 'Data/Web Interface/frontend.html'
 PORT = 8080
+
 def post_simplify(str,approx):
     exp=cas.TextToCAS(str)
-    result=exp.posforms(2,approx)
-    if type(result)==type(cas.TextToCAS("a")):
-        result=[result.tolatex()]
-    retval="SIMPL#"+exp.tolatex()
-    for n in result:
-        retval+=r"#\("+n+r"\)"
-    return retval
+    if ":=" in str:
+        return "ERROR"
+    if "solve" not in str and "Solve" not in str:
+        result=exp.posforms(2,approx)
+
+        if type(result)==type(cas.TextToCAS("a")):
+            result=[result.tolatex()]
+        retval="SIMPL#"+exp.tolatex()
+        for n in result:
+            retval+=r"#\("+n+r"\)"
+        return retval
+    else:
+        resultarr=displaymathcascall(str,approx)
+        if resultarr[0]==False:
+            return "ERROR"
+        return "SOLVE#"+r"\("+resultarr[1]+r"\)"
+
 def post_solve(str,approx):
     
     return "SOLVE"
@@ -62,5 +76,7 @@ def start_server():
     except KeyboardInterrupt:
         server.socket.close()
 if __name__ == "__main__":
+    config.Use_Coloredoutput=False
+    debug.lvl=0
     open_browser()
     start_server()

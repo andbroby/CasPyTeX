@@ -18,7 +18,13 @@ def maybecolored(str,colorname,checkval):
 	if checkval:
 		return "{"+r"\color{"+colorname+"}"+str+"}"
 	return str
-def picknicestsimplification(inputstr,posformoutput,substituted=None):#picks the nicest both args in expressions, not list
+
+
+
+
+
+
+def picknicestsimplification(inputstr,posformoutput):#picks the nicest both args in expressions, not list
 	"""
 	Picks the nicest simplification of inputstr (not a str, but an expression) from
 	a list of possible forms (expressions too)
@@ -66,7 +72,7 @@ class logfile:
 		self.appendline(rawstr)
 		self.writetofile()
 
-def displaymathcascall(matstr,approx):
+def displaymathcascall(matstr,approx,args):
 	"""
 	Inputs a string in the "mathmode" of CasPyTeX (ex: |2*3| (matstr would be "2*3)
 	and a bool specifying if the answer should be approximated
@@ -132,7 +138,9 @@ def displaymathcascall(matstr,approx):
 		solutions=equationclass.solve(solvenum)
 		returnstring=equationclass.tolatex()
 		if solutions==None:
-			return [True,returnstring+r"{\quad\color{red}\textrm{Could not find any solutions!} "]
+			if "s" not in args:
+				return [True,returnstring+r"{\quad\color{red}\textrm{Could not find any solutions!} "]
+			return None
 		if solutions!=None:
 			returnstring+=r"\iff "
 		if approx:solutions=[n.approx().simplify() for n in solutions]
@@ -143,14 +151,17 @@ def displaymathcascall(matstr,approx):
 				returnstring+=solvenum.tolatex(True)+"="+solution.tolatex(True)+r"\quad "+config.Or_Symbol+r"\quad "
 
 		returnstring=returnstring[:-len(config.Or_Symbol+r"\quad ")]
-		return 	[True, r"\["+returnstring+"\]"]
+		if "s" not in args:
+			return 	[True, returnstring]
+		return None
 
 
 	if ":=" in matstr:
 		beforeafterdefinition=matstr.split(r":=")
 		if len(beforeafterdefinition)!=2:
 			logger.logit("Definition Error: more than one \":=\"")
-			return [True,"Definition Error: more than one \":=\""]
+			print("Definition Error: more than one \":=\"")
+			sys.exit()
 		definenumstr=beforeafterdefinition[0]
 		definevalstr=beforeafterdefinition[1]
 		try:
@@ -163,21 +174,31 @@ def displaymathcascall(matstr,approx):
 			if definitionsucces:
 				simplified=picknicestsimplification(definevalue,definevalue.posforms(0,approx))
 				if simplified!=definevalue:
-					return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)+r"\;=\;"+maybecolored(simplified.tolatex(True),config.Color_of_output,config.Use_Coloredoutput)+r"\]"]
+					if "s" not in args:
+						return [True,definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)+(r"\;=\;"+maybecolored(simplified.tolatex(True),config.Color_of_output,config.Use_Coloredoutput))*(not "d" in args)]
+					else:
+						return None
+				if "s" not in args:
 
-				return [True,r"\["+definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+maybecolored(definevalue.tolatex(True),config.Color_of_output,config.Use_Coloredoutput)+r"\]"]
+					return [True,definenumber.tolatex(True)+" "+config.Definition_Symbol+" "+definevalue.tolatex(True)]
+				else:
+					return None
 			else:
 				raise ValueError() #just to get to the except
 		except:
 			logger.logit("Definition Error adding key "+matstr+  " to dict (bad key?)")
-			return [False,"Definition Error adding key "+matstr+  " to dict (bad key?)"]
+			print("FATAL:Definition Error adding key "+matstr+  " to dict (bad key?)")
+			sys.exit()
 	else:#can only simplify
 		origexp=textparser.TextToCAS(matstr)
 		nicest=picknicestsimplification(origexp.makepossiblesubstitutions(),origexp.posforms(0,approx))
 		if approx:
 			nicest=nicest.approx().simplify()
-		returnline=r"\["+origexp.tolatex()+"="+config.Use_Coloredoutput*r"\color{"+config.Use_Coloredoutput*config.Color_of_output+config.Use_Coloredoutput*"}"+nicest.tolatex(True)+r"\]"
-		return [True,returnline]
+		returnline=origexp.tolatex()+("="+config.Use_Coloredoutput*r"\color{"+config.Use_Coloredoutput*config.Color_of_output+config.Use_Coloredoutput*"}"+nicest.tolatex(True))*(not "d" in args)
+		if "s" not in args:
+			return [True,returnline]
+		else:
+			return None
 		#returnline=r"\["+origexp.tolatex()
 		#simplified=origexp.posforms(0,approx)[0]
 		#if simplified!=origexp:
@@ -185,7 +206,118 @@ def displaymathcascall(matstr,approx):
 		#returnline+=r"\]"
 		#return [True,returnline]
 
+def interpretnormalline(linestring):
+	"""
+	Interprets a single line that is not a command or a mathmode call
+	outputs the corresponding latex string
+	the priority of what it looks at:
+		-mathboxes
+		-bold text
+		-italic text
+	"""
+	skipuntil=-1
+	newlinestring=""
+	for index,char in enumerate(linestring):
+		if index<=skipuntil:
+			continue
+		start=False
+		if char=="|":
+			start=index
+			startstopinfo=False
+			findtwo=False
+			if index+1<len(linestring) and linestring[index+1]=="|":
+				#||asdfasdasdf||
+				findtwo=True
+			for newindex in range(start+findtwo+1,len(linestring)):
+				if linestring[newindex]=="|":
+					stop=False
+					if findtwo:
+						if newindex+1==len(linestring) or linestring[index+1]!="|":
+							raise ValueError("BAD MATBOX")
+						else:
+							stop=newindex+1
+							startstopinfo=[start,stop,True]
+														
+					else:
+						stop=newindex
+						startstopinfo=[start,stop,False]
+					break
+			if startstopinfo==False:
+				raise ValueError("BAD MATBOX",startstopinfo)
+			args=[""]
+			totalend=stop
+			if startstopinfo[1]+1<len(linestring) and linestring[startstopinfo[1]+1]=="?":
+				bracketoffset=0
+				totalend=False
+				for charindex in range(startstopinfo[1]+2,len(linestring)):
+					char2=linestring[charindex]
+					if char2=="{":
+						bracketoffset+=1
+					elif char2=="}":
+						bracketoffset-=1
+					if bracketoffset>0:
+						args[-1]+=char2
+					else:
+						if char2=="?":
+							args.append("")
+						elif char2==" " or charindex+1==len(linestring):
+							if char2!=" ":
+								args[-1]+=char2
+							totalend=charindex
+							break
+						else:
+							args[-1]+=char2
+	
+			matstr=linestring[startstopinfo[0]+startstopinfo[2]+1:startstopinfo[1]-startstopinfo[2]]
+			mathcodecall=displaymathcascall(matstr,startstopinfo[2],args)
+			if mathcodecall==None:
+				skipuntil=totalend
+				continue
+			if mathcodecall[0]==False:
+				print("BAD MATHMODE BOX, QUITTING")
+				sys.exit()
+			else:
+				newlinestring+="$"+mathcodecall[1]+"$"
+				skipuntil=totalend
+				continue
+		elif char=="*":
+			start=index
+			bold=False
+			if index+1<len(linestring) and linestring[index+1]=="*":
+				bold=True
+			bracketoffset=0
+			for indexchar in range(start+1+bold,len(linestring)):
+				char2=linestring[indexchar]
+				if char2=="{":
+					bracketoffset+=1
+				elif char2=="}":
+					bracketoffset-=1
+				if bracketoffset>0:
+					continue
+				else:
+					if char2=="*":
+						if bold and indexchar+1<len(linestring) and linestring[indexchar+1]=="*":
+							stop=indexchar+1
+						elif bold:
+							print("Bad bold typing,quitting")
+							sys.exit()
+						else:
+							stop=indexchar
 
+						break
+
+			inbetween=linestring[start+bold+1:stop-bold]
+			if bold:
+				newlinestring+=r"\textbf{"+inbetween+r"}"
+
+			else:
+				newlinestring+=r"\textit{"+inbetween+r"}"
+			skipuntil=stop
+			continue
+
+		else:
+			newlinestring+=char
+	return newlinestring
 
 def cpttolatex(lines,filename="unnamed.tex"): 
 	"""
@@ -202,13 +334,27 @@ def cpttolatex(lines,filename="unnamed.tex"):
 		path="".join([n+"\\" for n in filename.split("\\")[:-1]][:])
 		if path[-1]=="\\":
 			path=path[:-1]
-	print("FILPATH",Truefilename,path)
+	print("Interpreting file:","\""+Truefilename+"\"")
 	texfile=LatexFile(Truefilename,path)
 	starttime=time.time()
 	maketitle=False
 	forceappendline=False
 	lastlinewasnormal=True
-	for index,line in enumerate(lines):
+	#remove comments
+	lineswithoutcomments=[]
+	for line in lines:
+		newline=""
+		for index,char in enumerate(line):
+			if char=="/" and (index+1<len(line) and line[index+1]=="/") and not (index-1>=0 and line[index-1]!="\""):
+				break
+			if char=="\\" and (index+2<len(line) and line[index+1]=="/" and line[index+2]=="/"):
+				pass#dont add the escape char 
+			else:
+				newline+=char
+		if newline!="":
+			lineswithoutcomments.append(newline)
+	[print(n,"\n") for n in lineswithoutcomments]
+	for index,line in enumerate(lineswithoutcomments):
 		if forceappendline:
 			if "endlatex" in line and line[:2]=="#?":
 				forceappendline=False
@@ -246,15 +392,20 @@ def cpttolatex(lines,filename="unnamed.tex"):
 				lastlinewasnormal=False
 				continue
 		if line[0]==r"|":#Cas-calls
-			if line[1]==r"|":
-				retval=displaymathcascall(line[2:-2],True)#approx
+			interpretedasnormal=interpretnormalline(line)
+			if interpretnormalline=="":continue
+			retval=r"\["+interpretedasnormal[1:-1]+r"\]"
+			texfile.addline(retval)
+			continue
+			"""if line[1]==r"|":
+				retval=displaymathcascall(line[2:-2],True,[])#approx
 
 			else:
-				retval=displaymathcascall(line[1:-1],False)#no approx
+				retval=displaymathcascall(line[1:-1],False,[])#no approx
 			if retval[0]==False:
 				texfile.addline(r"\begin{verbatim}"+retval[1]+r"\end{verbatim}")
 			elif retval[0]==True:
-				texfile.addline(retval[1])
+				texfile.addline(r"\["+retval[1]+r"\]")"""
 			continue
 
 		if line[:2]=="#?": #preambles
@@ -337,7 +488,9 @@ def cpttolatex(lines,filename="unnamed.tex"):
 				texfile.addline(r"\subsection*{"+line[1:]+r"}")
 			lastlinewasnormal=False
 		else:#normal text, need to change *asdfasdf* to cursive and **asdfasdf** to bold
-			newline="" #where 
+			texfile.addline(r"\\"*lastlinewasnormal+interpretnormalline(line))
+			lastlinewasnormal=True
+			"""newline="" #where 
 			if lastlinewasnormal:
 				newline+=r"\\"
 			skipnext=False
@@ -372,7 +525,7 @@ def cpttolatex(lines,filename="unnamed.tex"):
 				else:
 					newline+=char
 			texfile.addline(newline)
-			lastlinewasnormal=True
+			lastlinewasnormal=True"""
 	print("CAS calls and typesetting took "+str(time.time()-starttime)+" seconds")
 	logger.logit("CAS calls and typesetting took "+str(time.time()-starttime)+" seconds")
 	compileresult=texfile.compiletolatex()
@@ -388,6 +541,7 @@ def cpttolatex(lines,filename="unnamed.tex"):
 #f=open("TextCAS/"+filename)
 #cpttolatex([n.replace("\n","") for n in f.readlines()],"test.cpt")
 if __name__=="__main__":
+#if False:
 	"""
 	Inputs the .cpt file into the cpttolatex() and it will compile and save the
 	resulting .pdf

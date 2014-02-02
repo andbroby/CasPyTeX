@@ -48,8 +48,8 @@ function xml_http_post(url, data, callback) {
 //#SAFEVAL1#=simplify
 //#SAFEVAL2#=solve
 
-function simplify_button() {
-    var data ="#SAFEVAL1"+ApproxIsChecked()+document.test_form.test_text.value;           
+function go_button() {
+    var data ="#SAFEVAL1"+ApproxIsChecked()+document.getElementById('test_text').value;
     xml_http_post("frontend.html", data, test_handle);
 }
 
@@ -63,6 +63,9 @@ function test_handle(req) {
             console.log(resarr[index])
             elem.innerHTML+="<br><center>"+resarr[index]+"</center>"
         };
+    }
+    else if (resarr[0]==="SOLVE"){
+        elem.innerHTML+="<br><center>"+resarr[1]+"</center>"
     };
     //elem.innerHTML+="<br>\\("+req.responseText+"\\)"
     var math = document.getElementById("test_result");
@@ -92,14 +95,17 @@ function ApproxIsChecked() {
 <center><img src="Apollonian_gasket.svg"  height="200" width="200"></center>
 
 <center><img src="logo.png" type="image/x-png" </center>
-<form name=test_form>
-<center><input type="text" name="test_text" value="" size="100"></center>
+
+<center><input type="text" id="test_text" value="" size="100" onPaste=""onkeydown="if (event.keyCode == 13) { go_button();return false;}" />
+
+
+<input type=button onClick="go_button();" value="Go" title="Simplify"></center>
 
 
 <center>
 
-<input type=button onClick="simplify_button();" value="Simplify" title="Simplify">
-<input type=button onClick="solve_button();" value="Solve" title="Solve">
+
+
 <input type=button value="Clear" onClick="clear_element();" value="Clear" title="Clear">
 <input id="approxcheck" type="checkbox" name="vehicle" value="Approx">Approximate results<br>
 

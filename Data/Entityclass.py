@@ -9,6 +9,7 @@ Use_Radians=config.Use_Radians
 dec_places=config.Decimal_Places
 const_pi=math.pi
 const_e =math.e
+cancallisunit=["number","potens","division","product"]
 
 class definitiondict:
 	"""
@@ -135,7 +136,6 @@ class definitiondict:
 
 
 
-cancallisunit=["number","potens","division","product"]
 class product:
 	"""
 	Represents a product, and is an expressionclass (Look at Doc/Expresion class.pdf)
@@ -431,6 +431,7 @@ class product:
 									worked=True
 									breakall=True
 									break								
+
 							elif focus==None or fac1.root.contains(focus.tostring()) or  (fac1.exponent.contains(focus.tostring())==False and fac2.exponent.contains(focus.tostring())==False):
 								newexp=maybeclass([fac1.exponent,fac2.exponent],addition)
 								newroot=fac1.root
@@ -837,13 +838,14 @@ class potens:
 	root = the root of the exponentiation (arr[0])
 	exponent = the power of the exponentiation (arr[1])
 	"""
-	def __init__(self,arr):
+	def __init__(self,arr,forcepotensprint=False):
 		"""
 		declares the variables, quits if bad arr
 		if the root is a unit, then it self is a unit
 		"""
 		self.arr=arr
 		self.rootandexponents=arr
+		self.forcepotensprint=forcepotensprint
 		if len(arr)!=2:
 			print_stack
 			print([n.tostring() for n in arr])
@@ -879,12 +881,17 @@ class potens:
 		If roundit=True, it will round numbers in the expression to a 
 		number of config.Significant_Figures
 		"""
+		if self.forcepotensprint==False and (self.exponent==division([number(["1"]),number(["2"])]) or self.exponent==number(["0.5"])):
+			return r"\sqrt{"+self.root.tolatex(roundit)+"}"
 		returnstring=""
 		if self.root.type()!="number":
 			returnstring+=r"\left("+self.root.tolatex(roundit)+r"\right)^"
 		else:
 			returnstring+=self.root.tolatex(roundit)+"^"
-		returnstring+="{"+self.exponent.tolatex(roundit)+"}"
+		explatex=self.exponent.tolatex(roundit)
+		if r"\frac" in explatex:
+			explatex=r"\left("+explatex+r"\right)"
+		returnstring+="{"+explatex+"}"
 		if returnstring[-1]=="^":
 			returnstring=returnstring[:-1]
 		return returnstring
@@ -894,7 +901,7 @@ class potens:
 		of itself. This is handled for every expressionclass by the SimplifyAll function
 		(also in this script)
 		"""
-		return SimplifyAll(self,focus,thrd)
+		return SimplifyAll(potens(self.arr),focus,thrd)
 	def maxleveloftree(self,level=0):
 		"""
 		Returns the maximum depth of the expression tree
@@ -1023,7 +1030,7 @@ class potens:
 		(addends, factors, (numerators and denominators)...)
 		used by __eq__
 		"""
-		return [self.type(),[self.root,self.exponent]]
+		return [self.type(),[self.forcepotensprint,[self.root,self.exponent]]]
 	def potenspotens(self,focus):
 		"""
 		Is a simplifying method (please look at Doc/Simplifying methods.pdf)
@@ -1093,7 +1100,7 @@ class potens:
 		Returns and expanded version of itself. This is done by the
 		global function ExpandAll (in this .py)
 		"""
-		return ExpandAll(self)
+		return ExpandAll(potens(self.arr))
 	def posforms(self,stringortex,approx=False):
 		"""
 		Returns an array of alternate forms of the expression.
@@ -1103,7 +1110,7 @@ class potens:
 			1 if the return array should be strings
 			2 if the return array should be latex strings
 		"""
-		return posformsimplify(self,stringortex,approx)
+		return posformsimplify(potens(self.arr),stringortex,approx)
 	def printtree(self,rec=0):
 		"""Prints the expressiontree in an easily readable form"""
 		print("   "*rec+"POTENS: "+self.tostring())
@@ -2221,7 +2228,7 @@ def ExpandAll(instance): #Expands and simplifies (a little)
 			if moveinexp!=False:
 				newinstance=moveinexp
 				continue
-			samerootnonintrusiveexp=newinstance.sameroot(True)
+			samerootnonintrusiveexp=newinstance.sameroot(None,True)
 			if samerootnonintrusiveexp!=False:
 				newinstance=samerootnonintrusiveexp
 				continue
@@ -2446,7 +2453,7 @@ def newevaluednum(inputfloat):
 		newnumber([str(inputfloat)])
 		expnumber=potens([number(["10"]),newnumber([str(exponent)])])
 
-		return pproduct([newnumber([multiplier]),expnumber])
+		return product([newnumber([multiplier]),expnumber])
 	elif inputfloat<0.001 and inputfloat>-0.001:
 		if inputfloat==0:
 			return number(["0"])

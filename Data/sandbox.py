@@ -1,6 +1,6 @@
 """
 This is just where i test python code.
 """
-a="solve( 2*x+2=3*x  , x)"
-
-print(0.9**100)
+a="||asdfasdfasdf||"
+startstopinfo=[0,-1,True]
+print(a[startstopinfo[0]+startstopinfo[2]+1:startstopinfo[1]-startstopinfo[2]])

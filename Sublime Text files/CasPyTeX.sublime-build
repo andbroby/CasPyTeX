@@ -1,3 +1,4 @@
 { 
-	"cmd": ["python3", "/home/esben/CasPyTeX/Data/TextCAS.py","$file"]
+	"cmd": ["python3", "/home/esben/CasPyTeX/Data/TextCAS.py","$file"],
+	"selector": "source.CasPyTeX"
 }

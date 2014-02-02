@@ -19,9 +19,15 @@ It also features a .cpt interpreter. The syntax of a .cpt (CasPyTex) file is sho
 
 The project is developed just for the fun of it.
 
+What's new
+-------------
+- added options for the math mode
+- Improved syntax highlighting in sublime text!
+- Added support for comments in .cpt files! (C-style "//",escaped "\//")
+- The web interface is working now
+
 To-do
 -------------
-- Update the Webinterface, and remove any interfaces that are not used
 - More simplifying methods for functions (trig, logs and sqrt)
 - Still more simplifying methods for fractions 
 - Support for smart units (Make the CAS know that 1km=1000m)

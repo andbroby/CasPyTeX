@@ -19,6 +19,14 @@
 		  ],
 		  "contentName": ""
 		},
+		{
+		  "match": "(^|[^\\\\])//(.*)",
+		  "name":"meta.diff.ssraw"
+		},
+
+		{ "match": "^\\#[^\\?](.*)",
+		  "name": "entity.name.function.ssraw"
+		},
         { "match": "(^\\#\\?([tT]itle|[Aa]uthor|[Dd]ate|Use_Radians|Decimal_Places|Significant_Figures|Use_Coloredoutput|Color_of_output|Or_Symbol|Definition_Symbol)=)(.*)",
           "name": "string.ssraw",
 		  "captures": {
@@ -29,11 +37,11 @@
 		{ "name": "doesthisnameevenmatter.ssraw",
 		  "begin": "(\\|\\|)",
 		  "beginCaptures": {
-		    "0": { "name": "entity.name.class.ssraw" }
+		    "0": { "name": "variable.parameter.ssraw" }
 		  },
 		  "end": "(\\|\\|)",
 		  "endCaptures": {
-		    "0": { "name": "entity.name.class.ssraw" }
+		    "0": { "name": "variable.parameter.ssraw" }
 		  },
 		  "patterns": [
 		     {  "name": "support.function.ssraw",
@@ -43,15 +51,20 @@
 		     	"match": "([Ss]olve\\()(.*)(,)(.*)(\\))[^\\|]*",
 			    "captures": {
 			       "1": { "name": "storage.ssraw" },
+			       "2": { "name": "entity.name.function.ssraw"},
 			       "3": { "name": "storage.ssraw" },
+			       "4": { "name": "entity.name.function.ssraw"},
 			       "5": { "name": "storage.ssraw" }
 			    },
-
 		     			  },
 		     { "name": "constant.character.ssraw",
 		       "match": "(sqrt|log|ln|sin|cos|tan|arcsin|arccos|arctan)"
 
-		     }
+		     },
+		     {
+		     	"name": "entity.name.function.ssraw",
+		     	"match": "[^\\|]"
+		     			  }
 
 		  ],
 		  "contentName": ""
@@ -59,13 +72,14 @@
 		{ "name": "doesthisnameevenmatter.ssraw",
 		  "begin": "(\\|)",
 		  "beginCaptures": {
-		    "0": { "name": "entity.name.class.ssraw" }
+		    "0": { "name": "variable.parameter.ssraw" }
 		  },
 		  "end": "(\\|)",
 		  "endCaptures": {
-		    "0": { "name": "entity.name.class.ssraw" }
+		    "0": { "name": "variable.parameter.ssraw" }
 		  },
 		  "patterns": [
+
 		     {  "name": "support.function.ssraw",
 		        "match": "(.*):=[^\\|]*"
 		                  },
@@ -73,17 +87,33 @@
 		     	"match": "([Ss]olve\\()(.*)(,)(.*)(\\))[^\\|]*",
 			    "captures": {
 			       "1": { "name": "storage.ssraw" },
+			       "2": { "name": "entity.name.function.ssraw"},
 			       "3": { "name": "storage.ssraw" },
+			       "4": { "name": "entity.name.function.ssraw"},
 			       "5": { "name": "storage.ssraw" }
 			    },
 		     			  },
 		     { "name": "constant.character.ssraw",
 		       "match": "(sqrt|log|ln|sin|cos|tan|arcsin|arccos|arctan)"
 
-		     }
+		     },
+		     {
+		     	"name": "entity.name.function.ssraw",
+		     	"match": "[^\\|]"
+		     			  }
 
 		  ],
 		  "contentName": ""
+		},
+		{ "name":"constant.numeric.ssraw",
+		  "match":"\\?[sd]"
+
+		},
+		{ "name":"entity.name.tag.ssraw",
+		  "match":"\\*\\*(.*)\\*\\*"
+		},
+		{ "name":"variable.parameter.ssraw",
+		  "match":"\\*(.*)\\*"
 		}
 
 

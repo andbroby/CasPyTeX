@@ -26,7 +26,8 @@ def TextToCAS(instring,recursions=0):
 					newinstring+="*"
 		newinstring+=char
 	instring=newinstring[:]
-
+	if ydersteparentes(stringtoparentespar(instring))==[0,len(instring)-1]:
+		instring=instring[1:-1]
 	#if instring[0]=="+":instring=instring[1:]
 	if instring[0]=="+" or instring[0]=="*":
 		instring=instring[1:]
@@ -39,12 +40,12 @@ def TextToCAS(instring,recursions=0):
 	#foerst addition
 	plusses=findcharoutsideparentes("+",instring)
 	if plusses!=[]:
-		debug(3,recursions*"    "+origin+" bliver til ADDITION "+str(splitstringbyindexes(instring,plusses)) )
+		debug(3,recursions*"    "+origin+" becomes ADDITION "+str(splitstringbyindexes(instring,plusses)) )
 		return Entities.addition([TextToCAS(n,recursions+1) for n in splitstringbyindexes(instring,plusses)])
 	#saa produkt
 	gangetegn=findcharoutsideparentes("*",instring)
 	if gangetegn!=[]:
-		debug(3,recursions*"    "+origin+" bliver til PRODUKT "+str(splitstringbyindexes(instring,gangetegn)) )
+		debug(3,recursions*"    "+origin+" becomes PRODUKT "+str(splitstringbyindexes(instring,gangetegn)) )
 		return Entities.product([TextToCAS(n,recursions+1) for n in splitstringbyindexes(instring,gangetegn)])
 	#saa division
 	broekstreger=findcharoutsideparentes("/",instring)
@@ -52,16 +53,16 @@ def TextToCAS(instring,recursions=0):
 		if len(broekstreger)>1:
 			debug(1,"TVETYDIG BROEK, STOPPER PROGRAMMET")
 			exit()
-		debug(3,recursions*"    "+origin+" bliver til DIVISION "+str(splitstringbyindexes(instring,broekstreger) ))
+		debug(3,recursions*"    "+origin+" becomes DIVISION "+str(splitstringbyindexes(instring,broekstreger) ))
 		return Entities.division([TextToCAS(n,recursions+1) for n in splitstringbyindexes(instring,broekstreger)])
 	#saa potenser
 	eksponenttegn=findcharoutsideparentes("^",instring)
 	if eksponenttegn!=[]:
 		if len(eksponenttegn)>1:
-			debug(1,"TVETYDIG POTENS, STOPPER PROGRAMMET")
+			debug(1,"Bad exponentiation, quitting")
 			exit()
-		debug(3,recursions*"    "+origin+" bliver til POTENS "+str(splitstringbyindexes(instring,eksponenttegn)) )
-		return Entities.potens([TextToCAS(n,recursions+1) for n in splitstringbyindexes(instring,eksponenttegn)])
+		debug(3,recursions*"    "+origin+" becomes POTENS "+str(splitstringbyindexes(instring,eksponenttegn)) )
+		return Entities.potens([TextToCAS(n,recursions+1) for n in splitstringbyindexes(instring,eksponenttegn)],True)
 	#saa funktioner
 	for index,char in enumerate(instring):
 		#allowedchars=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
@@ -94,38 +95,38 @@ def TextToCAS(instring,recursions=0):
 			#print(funcstring,insidebrackets)
 			if commaindexes==[]:# functions with one argument
 				if funcstring=="sin":
-					debug(3,recursions*"    "+origin+" bliver til Sine: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Sine: "+insidebrackets )
 
 					return Entities.sine([TextToCAS(insidebrackets,recursions+1)])
 				elif funcstring=="cos":
-					debug(3,recursions*"    "+origin+" bliver til Cosine: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Cosine: "+insidebrackets )
 					return Entities.cosine([TextToCAS(insidebrackets,recursions+1)])
 				elif funcstring=="tan":
-					debug(3,recursions*"    "+origin+" bliver til Tangent: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Tangent: "+insidebrackets )
 					return Entities.tangent([TextToCAS(insidebrackets,recursions+1)])
 
 				elif funcstring=="arcsin" or funcstring=="asin":
-					debug(3,recursions*"    "+origin+" bliver til Arcsine: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Arcsine: "+insidebrackets )
 					return Entities.arcsine([TextToCAS(insidebrackets,recursions+1)])
 				elif funcstring=="arccos" or funcstring=="acos":
-					debug(3,recursions*"    "+origin+" bliver til Arccosine: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Arccosine: "+insidebrackets )
 					return Entities.arccosine([TextToCAS(insidebrackets,recursions+1)])
 				elif funcstring=="arctan" or funcstring=="atan":
-					debug(3,recursions*"    "+origin+" bliver til Arctangent: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Arctangent: "+insidebrackets )
 					return Entities.arctangent([TextToCAS(insidebrackets,recursions+1)])
 
 				elif funcstring=="ln" or funcstring=="Ln":
-					debug(3,recursions*"    "+origin+" bliver til Natlogarithm: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes Natlogarithm: "+insidebrackets )
 					return Entities.natlogarithm([TextToCAS(insidebrackets,recursions+1)])
 				elif funcstring=="log" or funcstring=="Log":
-					debug(3,recursions*"    "+origin+" bliver til comlogarithm: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes comlogarithm: "+insidebrackets )
 					return Entities.comlogarithm([TextToCAS(insidebrackets,recursions+1)])
 
 				elif funcstring=="sqrt":
-					debug(3,recursions*"    "+origin+" bliver til squareroot: "+insidebrackets )
+					debug(3,recursions*"    "+origin+" becomes squareroot: "+insidebrackets )
 					return Entities.squareroot([TextToCAS(insidebrackets,recursions+1)])
 				else:
-					debug(3,recursions*"    "+origin+" bliver til unknownfunction: "+funcstring+"("+insidebrackets+")" )
+					debug(3,recursions*"    "+origin+" becomes unknownfunction: "+funcstring+"("+insidebrackets+")" )
 					return Entities.unknownfunction(funcstring,[TextToCAS(insidebrackets,recursions+1)])
 			else:
 				argstrings=splitstringbyindexes(insidebrackets,commaindexes)
@@ -140,18 +141,17 @@ def TextToCAS(instring,recursions=0):
 		exit()
 	#til sidst laves number instance
 	if instring[0]=="-":
-		debug(3,recursions*"    "+origin+" bliver til PRODUKT ['-1',"+instring[1:]+"]")
+		debug(3,recursions*"    "+origin+" becomes PRODUKT ['-1',"+instring[1:]+"]")
 		debug(3,(recursions+1)*"    "+"-1"+" er et \"noegent\" tal")
 		return Entities.product([Entities.number(["-1"]),TextToCAS(instring[1:],recursions+1)])
 	else:
 		debug(3,recursions*"    "+origin+" er et \"noegent\" tal")
 		return Entities.number([instring])
-debug.lvl=3
+debug.lvl=0
 if __name__=="__main__":
 	"""
 	This is just used when debugging
 	"""
-	a=Entities.potens([Entities.number(["2.6561398887587544"]),TextToCAS("-5")])
-	print(a.approx().tostring())
-	pass
+	a=TextToCAS("a^0.5")
+	print(a.posforms(2,False))
 	
