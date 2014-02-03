@@ -75,34 +75,36 @@ def sigfigroundfromstr(numberstr,sigfig):
 	Inputs a numberstring and a int of the amount if significant figures,
 	and returns the rounded numberstring 
 	"""
-    def trimZero(numberstr):
-        if numberstr.split(".")[-1] == "0":
-            return numberstr.split(".")[0]
-        return numberstr 
+	if sigfig==0:
+		raise ValueError("You can't have 0 significant figures")
+	def trimZero(numberstr):
+		if numberstr.split(".")[-1] == "0":
+			return numberstr.split(".")[0]
+		return numberstr 
 
-    floatS = float(numberstr)
-    leadingZeroes = 0
-    numberArray = [str(int(numberstr.split(".")[0])), str(int(numberstr.split(".")[-1]))]
+	floatS = float(numberstr)
+	leadingZeroes = 0
+	numberArray = [str(int(numberstr.split(".")[0])), str(int(numberstr.split(".")[-1]))]
 
-    if len(numberArray) > 1:
-        i = 0
-        while (numberArray[-1][i] == "0"):
-            leadingZeroes += 1
-            i += 1
+	if len(numberArray) > 1:
+		i = 0
+		while (numberArray[-1][i] == "0"):
+			leadingZeroes += 1
+			i += 1
 
-    if numberArray[0] == "0" and not leadingZeroes:
-        return str(round(floatS, sigfig))
-    elif leadingZeroes:
-        decimals = len(numberArray[-1]) if floatS - int(floatS) > 0 else 0
-        s2 = numberArray[-1][leadingZeroes:]
-        sigfig = len(s2) - sigfig
-        s2 = round(float(s2), -1*sigfig)
-        s2 = s2 / 10**decimals
-        return trimZero(str(s2))
-    else:
-        integerLen = len(numberArray[0])
-        sigfig = -1*(integerLen - sigfig)
-        roundedString = trimZero(str(round(floatS, sigfig)))
-        return roundedString
+	if numberArray[0] == "0" and not leadingZeroes:
+		return str(round(floatS, sigfig))
+	elif leadingZeroes:
+		decimals = len(numberArray[-1]) if floatS - int(floatS) > 0 else 0
+		s2 = numberArray[-1][leadingZeroes:]
+		sigfig = len(s2) - sigfig
+		s2 = round(float(s2), -1*sigfig)
+		s2 = s2 / 10**decimals
+		return trimZero(str(s2))
+	else:
+		integerLen = len(numberArray[0])
+		sigfig = -1*(integerLen - sigfig)
+		roundedString = trimZero(str(round(floatS, sigfig)))
+		return roundedString
 
-    
+	
