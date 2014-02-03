@@ -1,5 +1,7 @@
 CasPyTeX
 ------------------------------
+**An example of CasPyTeX can be found** [here](http://imgur.com/a/m1sbY)
+
 ![alt tag](http://i.imgur.com/14PCKRd.png)
 
 *CasPyTex is able to solve equations with units. The blue color is optional, and can be changed in the config.*

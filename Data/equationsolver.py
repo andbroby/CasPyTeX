@@ -96,6 +96,12 @@ class equation:
 		solvetry2=self.recursesolve(movedarr2[0],movedarr2[1],solvenum)
 		if solvetry2!=None:
 			return [n.simplify() for n in solvetry2]
+		movedarr3=[n for n in self.movesolvenumstoleftside(self.leftexp.expand(),self.rightexp.expand(),solvenum)]
+		solvetry3=self.recursesolve(movedarr3[0],movedarr3[1],solvenum)
+		if solvetry3!=None:
+			return [n.simplify() for n in solvetry3]
+		movedarr4=[n for n in self.movesolvenumstoleftside(self.rightexp.expand(),self.leftexp.expand(),solvenum)]
+
 		return None
 	def recursesolve(self,solvesideinput,constantsideinput,solvenum): #GOT TO RETURN ARRAYS OR BOOLS
 		"""

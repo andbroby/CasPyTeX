@@ -4033,6 +4033,8 @@ class unknownfunction:
 	"""
 	def __init__(self,funcstr,inputargs):
 		self.funcstr=funcstr
+		while self.funcstr[-1]==" ":
+			self.funcstr=self.funcstr[:-1]
 		self.args=inputargs
 	def type(self):
 		"""Returns the name of the class as a string"""
@@ -4050,7 +4052,8 @@ class unknownfunction:
 		If roundit=True, it will round numbers in the expression to a 
 		number of config.Significant_Figures
 		"""
-		return self.funcstr+r"\left("+"".join([n.tolatex()+"," for n in self.args])[:-1]+r"\right)"
+		#return self.funcstr+r"\left("+"".join([n.tolatex()+"," for n in self.args])[:-1]+r"\right)"
+		return self.funcstr+"("+"".join([n.tolatex()+"," for n in self.args])[:-1]+r")"
 	def simplify(self,focus=None,thrd=0):###
 		"""
 		Returns a simplified (and substituted) version

@@ -344,16 +344,19 @@ def cpttolatex(lines,filename="unnamed.tex"):
 	lineswithoutcomments=[]
 	for line in lines:
 		newline=""
+		wascommented=False
 		for index,char in enumerate(line):
-			if char=="/" and (index+1<len(line) and line[index+1]=="/") and not (index-1>=0 and line[index-1]!="\""):
+			if char=="/" and (index+1<len(line) and line[index+1]=="/") and not (index-1>=0 and line[index-1]=="\""):
+				wascommented=True
 				break
 			if char=="\\" and (index+2<len(line) and line[index+1]=="/" and line[index+2]=="/"):
 				pass#dont add the escape char 
 			else:
 				newline+=char
-		if newline!="":
-			lineswithoutcomments.append(newline)
-	[print(n,"\n") for n in lineswithoutcomments]
+		if newline=="" and wascommented:
+			continue
+		lineswithoutcomments.append(newline)
+	#[print(n,"\n") for n in lineswithoutcomments]
 	for index,line in enumerate(lineswithoutcomments):
 		if forceappendline:
 			if "endlatex" in line and line[:2]=="#?":
@@ -462,10 +465,10 @@ def cpttolatex(lines,filename="unnamed.tex"):
 					config.Use_Radians=True
 				elif value in ["False","false"]:
 					config.Use_Radians=False
-			elif variable in ["Decimal_Places"]:
+			elif variable in ["Significant_Figures"]:
 				try:
-					decplaces=int(variable)
-					config.Decimal_Places=decplaces
+					decplaces=int(value)
+					config.Significant_Figures=decplaces
 				except:
 					pass
 			elif variable in ["Use_Coloredoutput"]:
