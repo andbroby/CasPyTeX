@@ -46,10 +46,24 @@
 			</array>
 		</dict>
 		<dict>
+			<key>captures</key>
+			<dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>meta.diff.ssraw</string>
+				</dict>
+			</dict>
 			<key>match</key>
-			<string>(^|[^\\])//(.*)</string>
+			<string>(^|[^\\])(//(.*))</string>
 			<key>name</key>
-			<string>meta.diff.ssraw</string>
+			<string></string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>^\#\#[^\?](.*)</string>
+			<key>name</key>
+			<string>keyword.ssraw</string>
 		</dict>
 		<dict>
 			<key>match</key>
@@ -81,7 +95,7 @@
 				<key>0</key>
 				<dict>
 					<key>name</key>
-					<string>variable.parameter.ssraw</string>
+					<string>string.ssraw</string>
 				</dict>
 			</dict>
 			<key>contentName</key>
@@ -93,7 +107,7 @@
 				<key>0</key>
 				<dict>
 					<key>name</key>
-					<string>variable.parameter.ssraw</string>
+					<string>string.ssraw</string>
 				</dict>
 			</dict>
 			<key>name</key>
@@ -162,7 +176,7 @@
 				<key>0</key>
 				<dict>
 					<key>name</key>
-					<string>variable.parameter.ssraw</string>
+					<string>string.ssraw</string>
 				</dict>
 			</dict>
 			<key>contentName</key>
@@ -174,7 +188,7 @@
 				<key>0</key>
 				<dict>
 					<key>name</key>
-					<string>variable.parameter.ssraw</string>
+					<string>string.ssraw</string>
 				</dict>
 			</dict>
 			<key>name</key>

@@ -20,10 +20,16 @@
 		  "contentName": ""
 		},
 		{
-		  "match": "(^|[^\\\\])//(.*)",
-		  "name":"meta.diff.ssraw"
+		  "match": "(^|[^\\\\])(//(.*))",
+		  "name":"",
+		  "captures": {
+		  	"2": {"name": "meta.diff.ssraw"}
+		  }
 		},
 
+		{ "match": "^\\#\\#[^\\?](.*)",
+		  "name": "keyword.ssraw"
+		},
 		{ "match": "^\\#[^\\?](.*)",
 		  "name": "entity.name.function.ssraw"
 		},
@@ -37,11 +43,11 @@
 		{ "name": "doesthisnameevenmatter.ssraw",
 		  "begin": "(\\|\\|)",
 		  "beginCaptures": {
-		    "0": { "name": "variable.parameter.ssraw" }
+		    "0": { "name": "string.ssraw" }
 		  },
 		  "end": "(\\|\\|)",
 		  "endCaptures": {
-		    "0": { "name": "variable.parameter.ssraw" }
+		    "0": { "name": "string.ssraw" }
 		  },
 		  "patterns": [
 		     {  "name": "support.function.ssraw",
@@ -72,11 +78,11 @@
 		{ "name": "doesthisnameevenmatter.ssraw",
 		  "begin": "(\\|)",
 		  "beginCaptures": {
-		    "0": { "name": "variable.parameter.ssraw" }
+		    "0": { "name": "string.ssraw" }
 		  },
 		  "end": "(\\|)",
 		  "endCaptures": {
-		    "0": { "name": "variable.parameter.ssraw" }
+		    "0": { "name": "string.ssraw" }
 		  },
 		  "patterns": [
 
