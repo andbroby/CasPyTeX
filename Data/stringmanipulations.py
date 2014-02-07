@@ -84,7 +84,7 @@ def sigfigroundfromstr(numberstr,sigfig):
 
 	floatS = float(numberstr)
 	leadingZeroes = 0
-	numberArray = [str(int(numberstr.split(".")[0])), str(int(numberstr.split(".")[-1]))]
+	numberArray = [str(int(numberstr.split(".")[0])), numberstr.split(".")[-1]]
 
 	if len(numberArray) > 1:
 		i = 0
