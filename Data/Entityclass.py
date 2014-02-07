@@ -2458,7 +2458,7 @@ def newevaluednum(inputfloat):
 		if inputfloat==0:
 			return number(["0"])
 		if "e" not in str(inputfloat):
-			raise ValueError("Bad translation of float")
+			return number([str(inputfloat)])
 		else:
 			rets=str(inputfloat).split("e")
 			if rets[1][0]!="-":

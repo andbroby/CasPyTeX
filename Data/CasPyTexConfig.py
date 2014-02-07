@@ -7,4 +7,3 @@ Colors=["Apricot","Aquamarine","Bittersweet","Black","Blue","BlueGreen","BlueVio
 Or_Symbol=r"\textrm{or}"
 Definition_Symbol=r":="
 #white, black, red, green, blue, cyan, magenta, yellow
-

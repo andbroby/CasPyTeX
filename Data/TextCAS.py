@@ -549,7 +549,7 @@ if __name__=="__main__":
 	Inputs the .cpt file into the cpttolatex() and it will compile and save the
 	resulting .pdf
 	"""
-	debug.lvl=0
+	debug.lvl=3
 	if len(argv)!=2:
 		print("Bad arg, exiting")
 	filename=argv[1]

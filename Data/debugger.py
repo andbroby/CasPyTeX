@@ -1,3 +1,4 @@
+
 def debug(lvl,message): 
 	"""
 	Really simple debugging tool

@@ -1,5 +1,6 @@
 CasPyTeX
 ------------------------------
+**This project is being rewritten in golang** [here](https://github.com/Englebabz/CasGO)
 **An example of CasPyTeX can be found** [here](http://imgur.com/a/m1sbY)
 
 ![alt tag](http://i.imgur.com/14PCKRd.png)
@@ -23,6 +24,7 @@ The project is developed just for the fun of it.
 
 What's new
 -------------
+- Fixed small bug about whitespace
 - added options for the math mode
 - Improved syntax highlighting in sublime text!
 - Added support for comments in .cpt files! (C-style "//",escaped "\//")

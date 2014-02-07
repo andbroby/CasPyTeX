@@ -11,6 +11,19 @@ def TextToCAS(instring,recursions=0):
 	tree of the classes you'll see in Entityclass
 	"""
 	origin=instring
+	newinstring=""
+	braceroffset=0
+	for char in instring:
+		if char=="{":
+			braceroffset+=1
+		elif char == "}":
+			braceroffset-=1
+		if braceroffset==0:
+			if char !=" ":
+				newinstring += char
+		else:
+			newinstring+=char
+	instring = newinstring
 	instring=instring.replace("-","+-").replace("++","+").replace("--","+").replace("(+-","(-")
 	newinstring=""
 	for index,char in enumerate(instring):
@@ -154,4 +167,3 @@ if __name__=="__main__":
 	"""
 	a=TextToCAS("a^0.5")
 	print(a.posforms(2,False))
-	
